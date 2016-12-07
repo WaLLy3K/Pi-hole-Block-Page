@@ -13,6 +13,7 @@ $email = "admin@domain.com";
 $domain = "";
 
 # Define "flagType" of indivudual adlists.list URLs
+# Please add any domains here that has been manually placed in adlists.list
 # TODO: This could be done better
 $suspicious = array(
   "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts",
@@ -36,6 +37,12 @@ $advertising = array(
   "https://raw.githubusercontent.com/quidsup/notrack/master/trackers.txt",
 );
 
+$tracking = array(
+  "https://s3.amazonaws.com/lists.disconnect.me/simple_tracking.txt",
+  "https://raw.githubusercontent.com/crazy-max/WindowsSpyBlocker/master/data/hosts/win10/spy.txt",
+  "https://raw.githubusercontent.com/quidsup/notrack/master/trackers.txt",
+);
+
 $malicious = array(
   "http://mirror1.malwaredomains.com/files/justdomains",
   "https://zeustracker.abuse.ch/blocklist.php?download=domainblocklist",
@@ -55,7 +62,7 @@ $uriExt = pathinfo($_SERVER['REQUEST_URI'], PATHINFO_EXTENSION);
 
 # Define URI types
 if ($serverName == "pi.hole") {
-  header( 'Location: admin' );
+  header('Location: admin');
 }elseif (!empty($landing) && $serverName == $_SERVER['SERVER_ADDR'] || $serverName == $domain) {
   # When browsing to RPi, redirect to custom landing page
   include $landing;
@@ -91,8 +98,8 @@ if ($uriType == "file"){
 
   # Get all URLs starting with "http" from adlists.list
   # $urlList array key expected to match .domains list # in $listMatches!!
-  # This may not work if user updates gravity, and later inserts a new hosts URL at anywhere but the end
-  # Pi-Hole seemingly doesn't update .domains correctly, as of 10SEP16
+  # This may not work if admin updates gravity, and later inserts a new hosts URL at anywhere but the end
+  # Pi-hole seemingly will not update .domains correctly if this occurs, as of 10SEP16
   $urlList = array_values(preg_grep("/(^http)|(^www)/i", file('/etc/pihole/adlists.list', FILE_IGNORE_NEW_LINES)));
 
   # Return how many lists URL is featured in, and total lists count
