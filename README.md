@@ -26,7 +26,7 @@ sudo service lighttpd force-reload
 ## Website Test Cases:
 
 * http://192.168.1.x (Raspberry Pi IP) -- landing page
-* http://pi.hole -- site, blacklisted manually
+* http://pi.hole -- redirect to Pi-hole Admin Interface
 * http://doubleclick.net/ -- site
 * http://doubleclick.net?pihole=more -- site, more
 * http://doubleclick.net/some/folder -- site
