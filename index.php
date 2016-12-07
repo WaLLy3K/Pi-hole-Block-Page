@@ -54,7 +54,9 @@ $serverName = escapeshellcmd($_SERVER['SERVER_NAME']);
 $uriExt = pathinfo($_SERVER['REQUEST_URI'], PATHINFO_EXTENSION);
 
 # Define URI types
-if (!empty($landing) && $serverName == $_SERVER['SERVER_ADDR'] || $serverName == $domain) {
+if ($serverName == "pi.hole") {
+  header( 'Location: admin' );
+}elseif (!empty($landing) && $serverName == $_SERVER['SERVER_ADDR'] || $serverName == $domain) {
   # When browsing to RPi, redirect to custom landing page
   include $landing;
   exit();
