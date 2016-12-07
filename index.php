@@ -132,7 +132,7 @@ if ($uriType == "file"){
   echo "<!DOCTYPE html><head>
       <meta charset='UTF-8'/>
       <title>Website Blocked</title>
-      <link rel='stylesheet' href='https://firebog.net/stornur.css'/>
+      <link rel='stylesheet' href='style.css'/>
       <link rel='shortcut icon' href='/admin/img/favicon.png' type='image/png'/>
       <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'/>
       <meta name='robots' content='noindex,nofollow'/>
