@@ -30,6 +30,13 @@ sudo service lighttpd force-reload
 
 This script will not presume where the default document-root is, as [installations such as DietPi](https://github.com/Fourdee/DietPi/blob/master/dietpi/dietpi-software#L3552) are known to change this.
 
+## Uninstall:
+
+````
+html=$(grep server.document-root /etc/lighttpd/lighttpd.conf | awk -F\" '{print $2}')
+sudo rm -rf $html/PHV.svg $html/bg.svg $html/index.php $html/style.css /etc/lighttpd/conf-enabled/phbp.conf
+````
+
 ## Website Test Cases:
 
 * http://192.168.1.x (Raspberry Pi IP) -- landing page
