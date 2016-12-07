@@ -85,7 +85,7 @@ if ($uriType == "file"){
 
   # Grep exact search $serverName within individual blocked .domains lists
   # Returning a numerically sorted array of the "list #" of matching .domains
-  exec('grep "^0 '.$serverName.'" /etc/pihole/*domains | cut -d. -f2 | sort -n', $listMatches);
+  exec('grep "^0 '.$serverName.'" /etc/pihole/*domains | cut -d. -f2 | sort -un', $listMatches);
 
   # Get all URLs starting with "http" from adlists.list
   # $urlList array key expected to match .domains list # in $listMatches!!
