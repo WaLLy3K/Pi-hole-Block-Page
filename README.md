@@ -1,5 +1,5 @@
-# Pi-hole-Block-Page
-A user friendly "Website Blocked" page to add onto a https://pi-hole.net installation.
+# Pi-hole Block Page
+A user friendly "Website Blocked" page to add onto a [Pi-hole installation](https://pi-hole.net).
 
 ## What does this do?
 The goal is to provide concise and relevant feedback to the end user, so they are better informed about the site they are trying to visit.
@@ -13,15 +13,22 @@ In this case, `doubleclick.net` was found in `https://s3.amazonaws.com/lists.dis
 When one attempts to access any non HTML resource (IE: not HTML, PHP, XML or RSS), the page will interpret this request as a "file" and will show a denied symbol, with the text "Blocked by Pi-hole" next to it.
 
 ## Install:
-**DISCLAIMER:** This repo is a work in progress. For your sake, please consider all code to be *completely untested* until further notice. These instructions are provided as-is from the [original Pastebin link](http://pastebin.com/gtnM5ihU).
+**DISCLAIMER:** This repo is a work in progress. For your sake, please consider all code to be *completely untested* until further notice. These instructions are provided as-is, but have been updated from the [original Pastebin link](http://pastebin.com/gtnM5ihU).
 
 
 ````
-sudo wget -q https://raw.githubusercontent.com/WaLLy3K/Pi-hole-Block-Page/master/index.php -O /var/www/html/index.php
-sudo chmod 755 /var/www/html/index.php
-sudo sed -i 's:pihole/index.html:index.php:' /etc/lighttpd/lighttpd.conf
+html=$(grep server.document-root /etc/lighttpd/lighttpd.conf | awk -F\" '{print $2}')
+sudo wget -q https://raw.githubusercontent.com/WaLLy3K/Pi-hole-Block-Page/master/index.php -O "$html/index.php"
+sudo wget -q https://raw.githubusercontent.com/WaLLy3K/Pi-hole-Block-Page/master/PHV.svg -O "$html/PHV.svg"
+sudo wget -q https://raw.githubusercontent.com/WaLLy3K/Pi-hole-Block-Page/master/bg.svg -O "$html/bg.svg"
+sudo wget -q https://raw.githubusercontent.com/WaLLy3K/Pi-hole-Block-Page/master/style.css -O "$html/style.css"
+sudo chmod 755 "$html/index.php"
+[ ! -d "/etc/lighttpd/conf-enabled" ] && sudo mkdir -m 755 /etc/lighttpd/conf-enabled
+echo -e '# Pi-hole "server.error-handler-404" override\nurl.rewrite-once = ( "^/(.*)" => "/" )' | sudo tee /etc/lighttpd/conf-enabled/phbp.conf
 sudo service lighttpd force-reload
 ````
+
+This script will not presume where the default document-root is, as [installations such as DietPi](https://github.com/Fourdee/DietPi/blob/master/dietpi/dietpi-software#L3552) are known to change this.
 
 ## Website Test Cases:
 
