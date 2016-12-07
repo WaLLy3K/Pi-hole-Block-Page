@@ -24,7 +24,7 @@ sudo wget -q https://raw.githubusercontent.com/WaLLy3K/Pi-hole-Block-Page/master
 sudo wget -q https://raw.githubusercontent.com/WaLLy3K/Pi-hole-Block-Page/master/style.css -O "$html/style.css"
 sudo chmod 755 "$html/index.php"
 [ ! -d "/etc/lighttpd/conf-enabled" ] && sudo mkdir -m 755 /etc/lighttpd/conf-enabled
-echo -e '# Pi-hole "server.error-handler-404" override\nurl.rewrite-once = ( "^/(.*)" => "/" )' | sudo tee /etc/lighttpd/conf-enabled/phbp.conf
+echo -e '# Pi-hole "server.error-handler-404" override\nurl.rewrite-once = ( "pihole/index.html" => "/index.php" )' | sudo tee /etc/lighttpd/conf-enabled/phbp.conf
 sudo service lighttpd force-reload
 ````
 
