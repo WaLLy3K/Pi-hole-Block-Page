@@ -30,4 +30,5 @@ sudo service lighttpd force-reload
  
 ## Changelog:
 
-Update 10SEP16: Removed $ from grep search
+* 10SEP16: Removed $ from grep search
+* 07DEC16: Cleaned up formatting, changed some variables & uploaded to GitHub
