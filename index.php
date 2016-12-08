@@ -1,16 +1,16 @@
 <?php
 # Pi-hole Block Page: Show "Website Blocked" on blacklisted domains
-# by WaLLy3K 06SEP16 (Updated 07DEC16) for Pi-hole
+# by WaLLy3K 06SEP16 for Pi-hole
 
 # If user browses to Raspberry Pi's IP manually, where should they be directed?
 # Assumes default folder of /var/www/html/, leave blank for none
-$landing = "landing.php";
+$landPage = "landing.php";
 
 # Who should whitelist emails go to?
-$email = "admin@domain.com";
+$adminEmail = "admin@domain.com";
 
-# What is the name of your Pi-hole domain, if any?
-$domain = "";
+# What is the name of your domain, if any?
+$selfDomain = "";
 
 # Define "flagType" of indivudual adlists.list URLs
 # Please add any domains here that has been manually placed in adlists.list
@@ -63,18 +63,17 @@ $uriExt = pathinfo($_SERVER['REQUEST_URI'], PATHINFO_EXTENSION);
 # Define URI types
 if ($serverName == "pi.hole") {
   header('Location: admin');
-}elseif (!empty($landing) && $serverName == $_SERVER['SERVER_ADDR'] || $serverName == $domain) {
+}elseif (!empty($landPage) && $serverName == $_SERVER['SERVER_ADDR'] || !empty($landPage) && $serverName == $selfDomain) {
   # When browsing to RPi, redirect to custom landing page
-  include $landing;
+  include $landPage;
   exit();
 }elseif (substr_count($_SERVER['REQUEST_URI'], "pihole=more")) {
   # "pihole=more" is set
   $uriType = "more";
 }elseif (in_array($uriExt, $webRender)) {
-  # "Safe" file extension
   $uriType = "site";
-}elseif (!empty($uriExt) || substr_count($uri, "?")) {
-  # Get file extension, or check for query string
+}elseif (!empty($uriExt) || substr_count($_SERVER['REQUEST_URI'], "?")) {
+  # If file extension, or query string
   $uriType = "file";
 }else{
   $uriType = "site";
@@ -89,8 +88,8 @@ if ($uriType == "file"){
 }else{
   # Some error handling
   $domainList = glob('/etc/pihole/*domains');
-  if (empty($domainList)) die("[ERROR]: There are no blacklists in the Pi-Hole folder! Please update the list of ad-serving domains.");
-  if (!file_exists("/etc/pihole/adlists.list")) die("[ERROR]: There is no 'adlists.list' in the Pi-Hole folder!");
+  if (empty($domainList)) die("[ERROR]: There are no blacklists in the Pi-hole folder! Please update the list of ad-serving domains.");
+  if (!file_exists("/etc/pihole/adlists.list")) die("[ERROR]: There is no 'adlists.list' in the Pi-hole folder!");
 
   # Grep exact search $serverName within individual blocked .domains lists
   # Returning a numerically sorted array of the "list #" of matching .domains
@@ -111,6 +110,7 @@ if ($uriType == "file"){
   if ($featuredTotal == "0") {
     $notableFlag = "Blacklisted manually";
   }else{
+    $in = NULL;
     # Define "Featured Flag"
     foreach ($listMatches as $num) {
       # Create a string of flags for URL
@@ -139,7 +139,7 @@ if ($uriType == "file"){
   echo "<!DOCTYPE html><head>
       <meta charset='UTF-8'/>
       <title>Website Blocked</title>
-      <link rel='stylesheet' href='style.css'/>
+      <link rel='stylesheet' href='/style.css'/>
       <link rel='shortcut icon' href='/admin/img/favicon.png' type='image/png'/>
       <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'/>
       <meta name='robots' content='noindex,nofollow'/>
@@ -149,10 +149,10 @@ if ($uriType == "file"){
     </header><main>
     <div class='blocked'>
       Access to the following site has been blocked:<br/>
-      <span class='phmsg'>$serverName$foundText</span>
+      <span class='phmsg'>$serverName</span>
       This is primarily due to being flagged as:<br/>
       <span class='phmsg'>$notableFlag</span>
-      If you have an ongoing use for this website, please <a href='mailto:$email?subject=Site Blocked: $serverName'>ask to have it whitelisted</a>.
+      If you have an ongoing use for this website, please <a href='mailto:$adminEmail?subject=Site Blocked: $serverName'>ask to have it whitelisted</a>.
     </div>
     <div class='buttons'><a class='safe' href='javascript:history.back()'>Back to safety</a>
   ";
