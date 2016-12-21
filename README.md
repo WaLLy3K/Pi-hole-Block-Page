@@ -25,7 +25,7 @@ sudo wget -q https://raw.githubusercontent.com/WaLLy3K/Pi-hole-Block-Page/master
 sudo chmod 755 "$html/index.php"
 [ ! -d "/etc/lighttpd/conf-enabled" ] && sudo mkdir -m 755 /etc/lighttpd/conf-enabled
 echo -e '# Pi-hole "server.error-handler-404" override\nurl.rewrite-once = ( "pihole/index.html" => "/index.php" )' | sudo tee /etc/lighttpd/conf-enabled/phbp.conf
-sudo chown www-data:www-data /etc/pihole/*.domains
+sudo chown www-data:www-data /etc/pihole/list.*
 sudo service lighttpd force-reload
 ````
 
