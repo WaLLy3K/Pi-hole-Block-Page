@@ -90,15 +90,13 @@ if ($uriType == "file"){
   $domainList = glob('/etc/pihole/*domains');
   if (empty($domainList)) die("[ERROR]: There are no blacklists in the Pi-hole folder! Please update the list of ad-serving domains.");
   if (!file_exists("/etc/pihole/adlists.list")) die("[ERROR]: There is no 'adlists.list' in the Pi-hole folder!");
-  if (posix_getpwuid(fileowner('/etc/pihole/list.preEventHorizon'))['name'] == "root") {
-    $chError = "[ERROR]: Please chown '/etc/pihole/list.*' to www-data";
-  }else{
-    $chError = "";
-  }
   
   # Grep exact search $serverName within individual blocked .domains lists
   # Returning a numerically sorted array of the "list #" of matching .domains
-  exec('grep "'.$serverName.'" /etc/pihole/*domains | cut -d. -f2 | sort -un', $listMatches);
+  exec('sudo pihole -q "'.$serverName.'" | grep -v "0 results" | cut -d. -f2 | sort -un', $listMatches);
+  
+  # Remove blank entries created by grep -v
+  $listMatches = array_filter($listMatches);
 
   # Get all URLs starting with "http" from adlists.list
   # $urlList array key expected to match .domains list # in $listMatches!!
@@ -113,11 +111,7 @@ if ($uriType == "file"){
   # Featured total will be 0 for a manually blacklisted site
   # Or for a domain not found within "flagType" array
   if ($featuredTotal == "0") {
-    if ($chError) {
-      $notableFlag = "Unknown";
-    }else{
       $notableFlag = "Blacklisted manually";
-    }
   }else{
     $in = NULL;
     # Define "Featured Flag"
@@ -155,7 +149,7 @@ if ($uriType == "file"){
     </head><body><header id='block'>
       <h1><a href='/'>Website Blocked</a></h1>
       <div class='alt'>Pi-hole Status:<br/><span $piInfo</span></div>
-    </header>$chError<main>
+    </header><main>
     <div class='blocked'>
       Access to the following site has been blocked:<br/>
       <span class='phmsg'>$serverName</span>
