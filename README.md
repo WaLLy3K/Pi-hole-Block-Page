@@ -13,7 +13,7 @@ In this case, `doubleclick.net` was found in `https://s3.amazonaws.com/lists.dis
 When one attempts to access any non HTML resource (IE: not HTML, PHP, XML or RSS), the page will interpret this request as a "file" and will show a denied symbol, with the text "Blocked by Pi-hole" next to it.
 
 ## Install:
-**DISCLAIMER:** This repo is a work in progress. For your sake, please consider all code to be *completely untested* until further notice. These instructions are provided as-is, but have been updated from the [original Pastebin link](http://pastebin.com/gtnM5ihU).
+**DISCLAIMER:** This repo is a work in progress. While these instructions have been tested for my own setup, they have not been verified on any other build. While it shouldn't break, be prepared to troubleshoot if necessary.
 
 
 ````
@@ -35,6 +35,7 @@ This script will not presume where the default document-root is, as [installatio
 ````
 html=$(grep server.document-root /etc/lighttpd/lighttpd.conf | awk -F\" '{print $2}')
 sudo rm -rf $html/PHV.svg $html/bg.svg $html/index.php $html/style.css /etc/lighttpd/conf-enabled/phbp.conf
+sudo service lighttpd force-reload
 ````
 
 ## Website Test Cases:
