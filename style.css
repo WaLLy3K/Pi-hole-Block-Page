@@ -1,5 +1,5 @@
 /* Stornur: The primary style for https://firebog.net */
-/* by WaLLy3K 01FEB15 (Updated 07DEC16) */
+/* by WaLLy3K 01FEB15 */
 /* "header h1" modified for Pi-hole */
 
 /* Eric Meyer CSS Reset v2.0 | 20110126 */
@@ -13,8 +13,8 @@ html { font-size: 14px; }
 body {
   -webkit-text-size-adjust: 100%;
   background: rgba(245,245,245,1);
-  background-image: url("bg.svg"), -webkit-linear-gradient(top, rgba(225,225,225,0.95), rgba(245,245,245,0.95));
-  background-image: url("bg.svg"), linear-gradient(to bottom, rgba(225,225,225,0.95), rgba(245,245,245,0.95));
+  background-image: url("https://cdn.rawgit.com/WaLLy3K/Pi-hole-Block-Page/master/bg.svg"), -webkit-linear-gradient(top, rgba(225,225,225,0.95), rgba(245,245,245,0.95));
+  background-image: url("https://cdn.rawgit.com/WaLLy3K/Pi-hole-Block-Page/master/bg.svg"), linear-gradient(to bottom, rgba(225,225,225,0.95), rgba(245,245,245,0.95));
   background-attachment: fixed;
   font: 1rem Arial, sans-serif;
   color: rgba(0,0,0,0.75);
@@ -47,7 +47,7 @@ header h1, header div {
 }
 
 header h1 {
-  background: url("PHV.svg") 2px no-repeat;
+  background: url("https://cdn.rawgit.com/WaLLy3K/Pi-hole-Block-Page/master/PHV.svg") 2px no-repeat;
   font: bold 1.6rem "Trebuchet MS", sans-serif;
   text-indent: 35px;
 }
