@@ -9,45 +9,74 @@ $landPage = "landing.php";
 # Who should whitelist emails go to?
 $adminEmail = "admin@domain.com";
 
-# What is the name of your domain, if any?
+# What is the name of your domain, if any? (EG: mypi.dyndns.net)
 $selfDomain = "";
 
 # Define "flagType" of indivudual adlists.list URLs
 # Please add any domains here that has been manually placed in adlists.list
 # TODO: This could be done better
 $suspicious = array(
-  "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts",
-  "http://adblock.gjtech.net/?format=unix-hosts",
-  "http://sysctl.org/cameleon/hosts",
-  "https://hosts-file.net/ad_servers.txt",
-  "http://adblock.mahakala.is",
-  "https://raw.githubusercontent.com/crazy-max/WindowsSpyBlocker/master/data/hosts/win10/spy.txt",
-  "http://securemecca.com/Downloads/hosts.txt",
-  "https://raw.githubusercontent.com/BreakingTheNews/BreakingTheNews.github.io/master/hosts",
-  "https://raw.githubusercontent.com/Dawsey21/Lists/master/main-blacklist.txt",
-  "https://raw.github.com/notracking/hosts-blocklists/master/hostnames.txt",
-  "https://raw.github.com/notracking/hosts-blocklists/master/domains.txt",
-  "https://raw.githubusercontent.com/mat1th/Dns-add-block/master/hosts",
+  "raw.githubusercontent.com/AdAway/adaway.github.io/master/hosts.txt",
+  "raw.githubusercontent.com/StevenBlack/hosts/master/hosts",
+  "adblock.gjtech.net/?format=unix-hosts",
+  "sysctl.org/cameleon/hosts",
+  "hosts-file.net/ad_servers.txt",
+  "adblock.mahakala.is",
+  "raw.githubusercontent.com/crazy-max/WindowsSpyBlocker/master/data/hosts/win10/spy.txt",
+  "securemecca.com/Downloads/hosts.txt",
+  "raw.githubusercontent.com/BreakingTheNews/BreakingTheNews.github.io/master/hosts",
+  "raw.githubusercontent.com/Dawsey21/Lists/master/main-blacklist.txt",
+  "raw.github.com/notracking/hosts-blocklists/master/hostnames.txt",
+  "raw.github.com/notracking/hosts-blocklists/master/domains.txt",
+  "raw.githubusercontent.com/mat1th/Dns-add-block/master/hosts",
+  "bitbucket.org/ethanr/dns-blacklists/raw/8575c9f96e5b4a1308f2f12394abd86d0927a4a0/bad_lists/hosts.txt",
+  "bitbucket.org/ethanr/dns-blacklists/raw/8575c9f96e5b4a1308f2f12394abd86d0927a4a0/bad_lists/dom-bl-base.txt",
+  "bitbucket.org/ethanr/dns-blacklists/raw/8575c9f96e5b4a1308f2f12394abd86d0927a4a0/bad_lists/Mandiant_APT1_Report_Appendix_D.txt",
+  "www.hostsfile.org/Downloads/hosts.txt",
+  "raw.githubusercontent.com/joeylane/hosts/master/hosts",
+  "winhelp2002.mvps.org/hosts.txt",
+  "hostsfile.mine.nu/hosts0.txt",
+  "raw.githubusercontent.com/piwik/referrer-spam-blacklist/master/spammers.txt",
+  "raw.githubusercontent.com/ReddestDream/reddestdream.github.io/master/Projects/MinimalHosts/etc/MinimalHostsBlocker/minimalhosts",
+  "raw.githubusercontent.com/StevenBlack/hosts/master/data/add.Dead/hosts",
+  "raw.githubusercontent.com/StevenBlack/hosts/master/data/KADhosts/hosts",
+  "someonewhocares.org/hosts/zero/hosts",
+  "raw.githubusercontent.com/vokins/yhosts/master/hosts",
+  "raw.githubusercontent.com/vokins/yhosts/master/hosts",
 );
 
 $advertising = array(
-  "https://s3.amazonaws.com/lists.disconnect.me/simple_tracking.txt",
-  "https://s3.amazonaws.com/lists.disconnect.me/simple_ad.txt",
-  "http://optimate.dl.sourceforge.net/project/adzhosts/HOSTS.txt",
-  "https://raw.githubusercontent.com/quidsup/notrack/master/trackers.txt",
+  "s3.amazonaws.com/lists.disconnect.me/simple_ad.txt",
+  "optimate.dl.sourceforge.net/project/adzhosts/HOSTS.txt",
+  "raw.githubusercontent.com/quidsup/notrack/master/trackers.txt",
+  "pgl.yoyo.org/adservers/serverlist.php?hostformat=nohtml",
+  "raw.githubusercontent.com/StevenBlack/hosts/master/data/UncheckyAds/hosts",
+  "raw.githubusercontent.com/StevenBlack/hosts/master/data/SpotifyAds/hosts",
 );
 
 $tracking = array(
-  "https://s3.amazonaws.com/lists.disconnect.me/simple_tracking.txt",
-  "https://raw.githubusercontent.com/crazy-max/WindowsSpyBlocker/master/data/hosts/win10/spy.txt",
-  "https://raw.githubusercontent.com/quidsup/notrack/master/trackers.txt",
+  "s3.amazonaws.com/lists.disconnect.me/simple_tracking.txt",
+  "raw.githubusercontent.com/crazy-max/WindowsSpyBlocker/master/data/hosts/win10/spy.txt",
+  "raw.githubusercontent.com/quidsup/notrack/master/trackers.txt",
+  "raw.githubusercontent.com/quidsup/notrack/master/trackers.txt",
+  "raw.githubusercontent.com/StevenBlack/hosts/master/data/add.2o7Net/hosts",
+  "raw.githubusercontent.com/StevenBlack/hosts/master/data/Telemetry/hosts",
+  "raw.githubusercontent.com/StevenBlack/hosts/master/data/tyzbit/hosts",
 );
 
 $malicious = array(
-  "http://mirror1.malwaredomains.com/files/justdomains",
-  "https://zeustracker.abuse.ch/blocklist.php?download=domainblocklist",
-  "https://ransomwaretracker.abuse.ch/downloads/RW_DOMBL.txt",
-  "http://malwaredomains.lehigh.edu/files/domains.txt",
+  "mirror1.malwaredomains.com/files/justdomains",
+  "s3.amazonaws.com/lists.disconnect.me/simple_malvertising.txt",
+  "zeustracker.abuse.ch/blocklist.php?download=domainblocklist",
+  "ransomwaretracker.abuse.ch/downloads/RW_DOMBL.txt",
+  "malwaredomains.lehigh.edu/files/domains.txt",
+  "hosts-file.net/emd.txt",
+  "hosts-file.net/exp.txt",
+  "mirror.cedia.org.ec/malwaredomains/immortal_domains.txt",
+  "www.malwaredomainlist.com/hostslist/hosts.txt",
+  "mirror.cedia.org.ec/malwaredomains/justdomains",
+  "raw.githubusercontent.com/quidsup/notrack/master/malicious-sites.txt",
+  "raw.githubusercontent.com/StevenBlack/hosts/master/data/add.Risk/hosts",
 );
 
 # Define which URL extensions get rendered as "Website Blocked"
@@ -103,7 +132,10 @@ if ($uriType == "file"){
   # This may not work if admin updates gravity, and later inserts a new hosts URL at anywhere but the end
   # Pi-hole seemingly will not update .domains correctly if this occurs, as of 10SEP16
   $urlList = array_values(preg_grep("/(^http)|(^www)/i", file('/etc/pihole/adlists.list', FILE_IGNORE_NEW_LINES)));
-
+  
+  # Strip any combo of HTTP, HTTPS and WWW
+  $urlList_match = preg_replace('/https?\:\/\/(www.)?/i', '', $urlList);
+  
   # Return how many lists URL is featured in, and total lists count
   $featuredTotal = count(array_values(array_unique($listMatches)));
   $totalLists = count($urlList);
@@ -117,10 +149,10 @@ if ($uriType == "file"){
     # Define "Featured Flag"
     foreach ($listMatches as $num) {
       # Create a string of flags for URL
-      if(in_array($urlList[$num], $suspicious)) $in .= "sus ";
-      if(in_array($urlList[$num], $advertising)) $in .= "ads ";
-      if(in_array($urlList[$num], $tracking)) $in .= "trc ";
-      if(in_array($urlList[$num], $malicious)) $in .= "mal ";
+      if(in_array($urlList_match[$num], $suspicious)) $in .= "sus ";
+      if(in_array($urlList_match[$num], $advertising)) $in .= "ads ";
+      if(in_array($urlList_match[$num], $tracking)) $in .= "trc ";
+      if(in_array($urlList_match[$num], $malicious)) $in .= "mal ";
       
       # Return value of worst flag to user (EG: Malicious more notable than Suspicious)
       if (substr_count($in, "sus")) $notableFlag = "Suspicious";
@@ -142,7 +174,7 @@ if ($uriType == "file"){
   echo "<!DOCTYPE html><head>
       <meta charset='UTF-8'/>
       <title>Website Blocked</title>
-      <link rel='stylesheet' href='/style.css'/>
+      <link rel='stylesheet' href='https://cdn.rawgit.com/WaLLy3K/Pi-hole-Block-Page/master/style.css'/>
       <link rel='shortcut icon' href='/admin/img/favicon.png' type='image/png'/>
       <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'/>
       <meta name='robots' content='noindex,nofollow'/>
@@ -180,7 +212,7 @@ if ($uriType == "file"){
 
   echo "  
     </main>
-    <footer>Generated ".date('D g:i A, M d')." by Pi-hole ".exec('cd /etc/.pihole/ && git describe --tags --abbrev=0')."</footer>
+    <footer>Generated ".date('D g:i A, M d')." by <a href='https://github.com/WaLLy3K/Pi-hole-Block-Page'>Pi-hole Block Page</a></footer>
     </body></html>
   ";
 }
