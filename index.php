@@ -31,7 +31,7 @@ $suspicious = array(
   "raw.githubusercontent.com/StevenBlack/hosts/master/data/KADhosts/hosts",
   "someonewhocares.org/hosts/zero/hosts",
   "raw.githubusercontent.com/vokins/yhosts/master/hosts",
-  "raw.githubusercontent.com/vokins/yhosts/master/hosts",
+  "raw.githubusercontent.com/eladkarako/hosts.eladkarako.com/master/_raw__hosts.txt",
 );
 
 $advertising = array(
