@@ -31,7 +31,7 @@ This script will not presume where the default document-root is, as [installatio
 
 ````
 html=$(grep server.document-root /etc/lighttpd/lighttpd.conf | awk -F\" '{print $2}')
-sudo rm -rf $html/PHV.svg $html/bg.svg $html/index.php $html/style.css /etc/lighttpd/conf-enabled/phbp.conf
+sudo rm -rf $html/index.php /etc/lighttpd/conf-enabled/phbp.conf
 sudo service lighttpd force-reload
 ````
 
