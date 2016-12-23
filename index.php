@@ -124,8 +124,8 @@ if ($uriType == "file"){
   # Returning a numerically sorted array of the "list #" of matching .domains
   exec('sudo pihole -q "'.$serverName.'" | grep -v "0 results" | cut -d. -f2 | sort -un', $listMatches);
   
-  # Remove blank entries created by grep -v
-  $listMatches = array_filter($listMatches);
+  # Remove blank entries created by grep -v, but not 0 value
+  $listMatches = array_filter($listMatches, 'strlen');
 
   # Get all URLs starting with "http" from adlists.list
   # $urlList array key expected to match .domains list # in $listMatches!!
