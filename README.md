@@ -19,6 +19,7 @@ When one attempts to access any non HTML resource (IE: not HTML, PHP, XML or RSS
 ````
 html=$(grep server.document-root /etc/lighttpd/lighttpd.conf | awk -F\" '{print $2}')
 sudo wget -q https://raw.githubusercontent.com/WaLLy3K/Pi-hole-Block-Page/master/index.php -O "$html/index.php"
+sudo wget -q https://raw.githubusercontent.com/WaLLy3K/Pi-hole-Block-Page/master/phbp.php -O "/var/phbp.php"
 sudo chmod 755 "$html/index.php"
 [ ! -d "/etc/lighttpd/conf-enabled" ] && sudo mkdir -m 755 /etc/lighttpd/conf-enabled
 echo -e '# Pi-hole "server.error-handler-404" override\nurl.rewrite-once = ( "pihole/index.html" => "/index.php" )' | sudo tee /etc/lighttpd/conf-enabled/phbp.conf
@@ -31,7 +32,7 @@ This script will not presume where the default document-root is, as [installatio
 
 ````
 html=$(grep server.document-root /etc/lighttpd/lighttpd.conf | awk -F\" '{print $2}')
-sudo rm -rf $html/index.php /etc/lighttpd/conf-enabled/phbp.conf
+sudo rm -rf $html/index.php /var/phbp.php /etc/lighttpd/conf-enabled/phbp.conf
 sudo service lighttpd force-reload
 ````
 
