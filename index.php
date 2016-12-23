@@ -72,10 +72,10 @@ $malicious = array(
 if (file_exists("/var/phbp.php")) include '/var/phbp.php';
 
 # Merge custom flagTypes with default flagTypes
-if (isset($suspicious_custom)) array_merge($suspicious, $suspicious_custom);
-if (isset($advertising_custom)) array_merge($advertising, $advertising_custom);
-if (isset($tracking_custom)) array_merge($tracking, $tracking_custom);
-if (isset($malicious_custom)) array_merge($malicious, $malicious_custom);
+if (isset($suspicious_custom)) $suspicious = array_merge($suspicious, $suspicious_custom);
+if (isset($advertising_custom)) $advertising = array_merge($advertising, $advertising_custom);
+if (isset($tracking_custom)) $tracking = array_merge($tracking, $tracking_custom);
+if (isset($malicious_custom)) $malicious = array_merge($malicious, $malicious_custom);
 
 # Define which URL extensions get rendered as "Website Blocked"
 # Index files should always be rendered as "Website Blocked" anyway
