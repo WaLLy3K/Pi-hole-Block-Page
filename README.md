@@ -15,7 +15,7 @@ When one attempts to access any non HTML resource (IE: not HTML, PHP, XML or RSS
 ![Blocked by Pi-hole](http://i.imgur.com/FhUowPh.png)
 
 ## Install:
-**DISCLAIMER:** This repo is a work in progress. While these instructions have been tested for my own setup, they have not been verified on any other build. While it shouldn't break, be prepared to troubleshoot if necessary.
+**DISCLAIMER:** While these instructions have been tested for my own setup, they have not been verified on any other build. While it shouldn't break, be prepared to troubleshoot if necessary.
 
 
 ````
