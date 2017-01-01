@@ -120,7 +120,7 @@ if ($uriType == "file"){
   
   # Grep exact search $serverName within individual blocked .domains lists
   # Returning a numerically sorted array of the "list #" of matching .domains
-  exec('sudo pihole -q " '.$serverName.'" | grep -E "[1-9] results" | cut -d. -f2 | sort -un', $listMatches);
+  exec('sudo pihole -q " '.$serverName.'" | grep -E "[1-9] results" | cut -d. -f2 | sort -un | grep -v "preEventHorizon"', $listMatches);
   
   # Remove blank entries created by grep -v, but not 0 value
   $listMatches = array_filter($listMatches, 'strlen');
