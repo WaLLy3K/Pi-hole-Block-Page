@@ -139,6 +139,7 @@ a.warn { background-color: rgba(220,0,0,0.4); }
 @media only screen and (min-device-width : 320px) and (max-device-width : 480px) and (orientation : portrait) {
   main { width: 100%; border-radius: 0; margin: 0 0 4px 0; border-width: 1px 0; }
   header { background-color: rgba(255,255,255,0.3); }
+  header h1:before { height: 0; }
   header h1:after { height: 42px; }
   header h1 { text-indent:28px;  font-size: 1.7rem; }
 }
