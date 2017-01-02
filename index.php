@@ -172,8 +172,8 @@ if ($uriType == "file"){
   echo "<!DOCTYPE html><head>
       <meta charset='UTF-8'/>
       <title>Website Blocked</title>
-      <link rel='stylesheet' href='https://cdn.rawgit.com/WaLLy3K/Pi-hole-Block-Page/master/style.css'/>
-      <link rel='shortcut icon' href='/admin/img/favicon.png' type='image/png'/>
+      <link rel='stylesheet' href='https://wally3k.github.io/style/pihole.css'/>
+      <link rel='shortcut icon' href='https://raw.githubusercontent.com/pi-hole/AdminLTE/master/img/favicon.png' type='image/png'/>
       <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'/>
       <meta name='robots' content='noindex,nofollow'/>
     </head><body><header id='block'>
