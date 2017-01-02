@@ -185,8 +185,7 @@ if ($uriType == "file"){
     $uriStrip = preg_replace("/.pihole=more/", "", $_SERVER['REQUEST_URI']);
     echo "&nbsp;<a class='warn' href='http://$serverName$uriStrip'>Less Info</a></div>";
     echo "<br/><div>This site is found in $featuredTotal of $totalLists .domains ".(count($listMatches) == 1 ? 'list' : 'lists').": ".implode(', ', $listMatches)."</div>";
-    # Native scrolling on iOS is a nice touch
-    echo "<div style='font-family: monospace; font-size: 0.8em;margin: 2px 0 0 8px; overflow: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; width: 100%;'>";
+    echo "<div class='more'>";
     foreach ($listMatches as $num) {
       echo "  [$num]: <a href='$urlList[$num]'>$urlList[$num]</a><br/>";
     }
