@@ -159,14 +159,6 @@ if ($uriType == "file"){
     }
   }
 
-  # Probably redundant since this page should only display if dnsmasq working
-  $piStatus = exec('pgrep dnsmasq | wc -l');
-  if ($piStatus > "0") {
-    $piInfo = "class='active'>Active &#10003;";
-  }else{
-    $piInfo = "class='inactive'>Offline &#10007;";
-  }
-
   echo "<!DOCTYPE html><head>
       <meta charset='UTF-8'/>
       <title>Website Blocked</title>
@@ -176,7 +168,6 @@ if ($uriType == "file"){
       <meta name='robots' content='noindex,nofollow'/>
     </head><body><header id='block'>
       <h1><a href='/'>Website Blocked</a></h1>
-      <div class='alt'>Pi-hole Status:<br/><span $piInfo</span></div>
     </header><main>
     <div class='blocked'>
       Access to the following site has been blocked:<br/>
