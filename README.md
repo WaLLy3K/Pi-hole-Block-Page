@@ -12,7 +12,7 @@ In this case, `doubleclick.net` was found in `https://s3.amazonaws.com/lists.dis
 
 When one attempts to access any non HTML resource (IE: not HTML, PHP, XML or RSS), the page will interpret this request as a "file" and will show the following image:
 
-![Blocked by Pi-hole](http://i.imgur.com/FhUowPh.png)
+![Blocked by Pi-hole](https://wally3k.github.io/style/blocked.svg)
 
 ## Install:
 **DISCLAIMER:** While these instructions have been tested for my own setup, they have not been verified on any other build. While it shouldn't break, be prepared to troubleshoot if necessary.
