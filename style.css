@@ -14,8 +14,8 @@ html { font-size: 14px; }
 body {
   -webkit-text-size-adjust: 100%;
   background: #e6e6e6 repeat fixed;
-  background-image: -webkit-linear-gradient(top, rgba(220,220,220,0.6), rgba(240,240,240,0.6)), url('/admin/img/boxed-bg.jpg');
-  background-image: linear-gradient(to bottom, rgba(220,220,220,0.6), rgba(240,240,240,0.6)), url('/admin/img/boxed-bg.jpg');
+  background-image: -webkit-linear-gradient(top, rgba(220,220,220,0.6), rgba(240,240,240,0.6)), url('https://raw.githubusercontent.com/pi-hole/AdminLTE/master/img/boxed-bg.jpg');
+  background-image: linear-gradient(to bottom, rgba(220,220,220,0.6), rgba(240,240,240,0.6)), url('https://raw.githubusercontent.com/pi-hole/AdminLTE/master/img/boxed-bg.jpg');
   font: 1rem 'Helvetica Neue', Helvetica, Arial, sans-serif;
   color: #444;
   text-shadow: 0 1px rgba(0,0,0,0.04);
