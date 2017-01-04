@@ -14,6 +14,8 @@ When one attempts to access any non HTML resource (IE: not HTML, PHP, XML or RSS
 
 ![Blocked by Pi-hole](https://wally3k.github.io/style/blocked.svg)
 
+If the blockpage is accessed through an iframe, a 1x1 transparent GIF ~~will~~ should be shown.
+
 ## Install:
 **DISCLAIMER:** While these instructions have been tested for my own setup, they have not been verified on any other build. While it shouldn't break, be prepared to troubleshoot if necessary.
 
@@ -24,7 +26,7 @@ sudo wget -q https://raw.githubusercontent.com/WaLLy3K/Pi-hole-Block-Page/master
 sudo wget -q https://raw.githubusercontent.com/WaLLy3K/Pi-hole-Block-Page/master/phbp.php -O "/var/phbp.php"
 sudo chmod 755 "$html/index.php"
 [ ! -d "/etc/lighttpd/conf-enabled" ] && sudo mkdir -m 755 /etc/lighttpd/conf-enabled
-echo -e '# Pi-hole "server.error-handler-404" override\nurl.rewrite-once = ( "pihole/index.html" => "/index.php" )' | sudo tee /etc/lighttpd/conf-enabled/phbp.conf
+echo -e '# Pi-hole "server.error-handler-404" override\nurl.rewrite-once = ( "pihole/index.php" => "/index.php" )' | sudo tee /etc/lighttpd/conf-enabled/phbp.conf
 sudo service lighttpd force-reload
 ````
 
@@ -43,15 +45,11 @@ sudo service lighttpd force-reload
 * http://192.168.1.x (Raspberry Pi IP) -- landing page
 * http://pi.hole -- redirect to Pi-hole Admin Interface
 * http://doubleclick.net/ -- site
-* http://doubleclick.net?pihole=more -- site, more
 * http://doubleclick.net/some/folder -- site
 * http://doubleclick.net/some/content.php -- site
 * http://doubleclick.net/some/content.php?query=true -- file
-* http://doubleclick.net/some/content.php?query=true&pihole=more -- site, more
 * http://doubleclick.net/file.exe -- file
-* http://doubleclick.net/file.exe?query=true -- file
 * http://doubleclick.net/some/image.gif -- file
-* http://doubleclick.net/image.gif?query=true -- file
  
  
 ## Pre-Github changelog:
