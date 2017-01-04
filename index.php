@@ -79,7 +79,7 @@ if (isset($tracking_custom)) $tracking = array_merge($tracking, $tracking_custom
 if (isset($malicious_custom)) $malicious = array_merge($malicious, $malicious_custom);
 
 # Default Config Options
-if (!isset($css)) $css = "/pihole/blockingpage.css"; # Default CSS
+if (!isset($css)) $css = "https://wally3k.github.io/style/pihole.css"; # Default CSS
 if (!isset($favicon)) $favicon = "/admin/img/favicon.png"; # Default Favicon
 if (!isset($logo)) $logo = "https://wally3k.github.io/style/phv.svg"; # Default Logo
 if (!isset($blockedImage)) $blockImage = "https://wally3k.github.io/style/blocked.svg"; # Default Block Image
