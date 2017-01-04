@@ -11,6 +11,9 @@ $adminEmail = "admin@domain.com";
 # What is the name of your domain, if any? (EG: subdomain.domain.com)
 $selfDomain = "";
 
+# Should we allow users to whitelist from the block page, with the correct password?
+$allowWhitelisting = "true";
+
 # What is the URL for your preferred Style Sheet?
 #$css = "https://wally3k.github.io/style/pihole.css";
 
