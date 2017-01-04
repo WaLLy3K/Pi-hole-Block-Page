@@ -49,7 +49,8 @@ $tracking = array(
   "raw.githubusercontent.com/quidsup/notrack/master/trackers.txt",
   "raw.githubusercontent.com/quidsup/notrack/master/trackers.txt",
   "raw.githubusercontent.com/StevenBlack/hosts/master/data/add.2o7Net/hosts",
-  "raw.githubusercontent.com/StevenBlack/hosts/master/data/Telemetry/hosts",
+  "raw.githubusercontent.com/StevenBlack/hosts/master/data/WindowsSpyBlocker/spy-win81/hosts",
+  "raw.githubusercontent.com/StevenBlack/hosts/master/data/WindowsSpyBlocker/spy-win10/hosts",
   "raw.githubusercontent.com/StevenBlack/hosts/master/data/tyzbit/hosts",
 );
 
@@ -77,11 +78,17 @@ if (isset($advertising_custom)) $advertising = array_merge($advertising, $advert
 if (isset($tracking_custom)) $tracking = array_merge($tracking, $tracking_custom);
 if (isset($malicious_custom)) $malicious = array_merge($malicious, $malicious_custom);
 
+# Default Config Options
+if (!isset($css)) $css = "/pihole/blockingpage.css"; # Default CSS
+if (!isset($favicon)) $favicon = "/admin/img/favicon.png"; # Default Favicon
+if (!isset($logo)) $logo = "https://wally3k.github.io/style/phv.svg"; # Default Logo
+if (!isset($blockedImage)) $blockImage = "https://wally3k.github.io/style/blocked.svg"; # Default Block Image
+
 # Define which URL extensions get rendered as "Website Blocked"
 # Index files should always be rendered as "Website Blocked" anyway
 $webRender = array('asp', 'htm', 'html', 'php', 'rss', 'xml');
 
-# "Should" prevent arbitrary commands from being run as www-data when using grep
+# "Should" prevent arbitrary commands from being run as www-data when using wget
 $serverName = escapeshellcmd($_SERVER['SERVER_NAME']);
 
 # Retrieve server URI extension (EG: jpg, exe, php)
@@ -94,112 +101,157 @@ if ($serverName == "pi.hole") {
   # When browsing to RPi, redirect to custom landing page
   include $landPage;
   exit();
-}elseif (substr_count($_SERVER['REQUEST_URI'], "pihole=more")) {
-  # "pihole=more" is set
-  $uriType = "more";
 }elseif (in_array($uriExt, $webRender)) {
   $uriType = "site";
+}elseif (substr_count($_SERVER['REQUEST_URI'], "?") && isset($_SERVER['HTTP_REFERER'])) {
+  # Serve a 1x1 blank gif to POTENTIAL iframe
+  die('<img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">');
 }elseif (!empty($uriExt) || substr_count($_SERVER['REQUEST_URI'], "?")) {
-  # If file extension, or query string
-  $uriType = "file";
+  # If file extension, or non-iframed query string
+  # Serve this image to URI's defined as file
+  die('<head><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/></head><img src="'.$blockImage.'"/>');
 }else{
   $uriType = "site";
 }
 
-# Handle incoming URI types
-if ($uriType == "file"){
-  # Serve this SVG to URI's defined as file
-  die('<head><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/></head><img src="https://wally3k.github.io/style/blocked.svg"/>');
+# Some error handling
+if (empty(glob('/etc/pihole/*domains'))) die("[ERROR]: There are no blacklists in the Pi-hole folder! Please update the list of ad-serving domains.");
+if (!file_exists("/etc/pihole/adlists.list")) die("[ERROR]: There is no 'adlists.list' in the Pi-hole folder!");
+
+# Exact search, returning a numerically sorted # list of matching .domains
+exec('wget -qO - "http://pi.hole/admin/scripts/pi-hole/php/queryads.php?domain="'.$serverName.'"&exact" | grep -E ".domains.*\([1-9]" | cut -d. -f2 | sort -un', $listMatches);
+
+# Get all URLs starting with "http" from adlists.list
+# $urlList array key expected to match .domains list # in $listMatches!!
+# This may not work if admin updates gravity, and later inserts a new hosts URL at anywhere but the end before re-running gravity
+$urlList = array_values(preg_grep("/(^http)|(^www)/i", file('/etc/pihole/adlists.list', FILE_IGNORE_NEW_LINES)));
+
+# Strip any combo of HTTP, HTTPS and WWW
+$urlList_match = preg_replace('/https?\:\/\/(www.)?/i', '', $urlList);
+
+# Return how many lists URL is featured in, and total lists count
+$featuredTotal = count(array_values(array_unique($listMatches)));
+$totalLists = count($urlList);
+
+# Featured total will be 0 for a manually blacklisted site
+if ($featuredTotal == "0") {
+    $notableFlag = "Blacklisted manually";
 }else{
-  # Some error handling
-  $domainList = glob('/etc/pihole/*domains');
-  if (empty($domainList)) die("[ERROR]: There are no blacklists in the Pi-hole folder! Please update the list of ad-serving domains.");
-  if (!file_exists("/etc/pihole/adlists.list")) die("[ERROR]: There is no 'adlists.list' in the Pi-hole folder!");
-  
-  # Grep exact search $serverName within individual blocked .domains lists
-  # Returning a numerically sorted array of the "list #" of matching .domains
-  exec('sudo pihole -q " '.$serverName.'" | grep -E "[1-9] results" | cut -d. -f2 | sort -un | grep -v "preEventHorizon"', $listMatches);
-  
-  # Remove blank entries created by grep -v, but not 0 value
-  $listMatches = array_filter($listMatches, 'strlen');
-
-  # Get all URLs starting with "http" from adlists.list
-  # $urlList array key expected to match .domains list # in $listMatches!!
-  # This may not work if admin updates gravity, and later inserts a new hosts URL at anywhere but the end
-  # Pi-hole seemingly will not update .domains correctly if this occurs, as of 10SEP16
-  $urlList = array_values(preg_grep("/(^http)|(^www)/i", file('/etc/pihole/adlists.list', FILE_IGNORE_NEW_LINES)));
-  
-  # Strip any combo of HTTP, HTTPS and WWW
-  $urlList_match = preg_replace('/https?\:\/\/(www.)?/i', '', $urlList);
-  
-  # Return how many lists URL is featured in, and total lists count
-  $featuredTotal = count(array_values(array_unique($listMatches)));
-  $totalLists = count($urlList);
-
-  # Featured total will be 0 for a manually blacklisted site
-  # Or for a domain not found within "flagType" array
-  if ($featuredTotal == "0") {
-      $notableFlag = "Blacklisted manually";
-  }else{
-    $in = NULL;
-    # Define "Featured Flag"
-    foreach ($listMatches as $num) {
-      # Create a string of flags for URL
-      if(in_array($urlList_match[$num], $suspicious)) $in .= "sus ";
-      if(in_array($urlList_match[$num], $advertising)) $in .= "ads ";
-      if(in_array($urlList_match[$num], $tracking)) $in .= "trc ";
-      if(in_array($urlList_match[$num], $malicious)) $in .= "mal ";
-      
-      # Return value of worst flag to user (EG: Malicious more notable than Suspicious)
-      if (substr_count($in, "sus")) $notableFlag = "Suspicious";
-      if (substr_count($in, "ads")) $notableFlag = "Advertising";
-      if (substr_count($in, "trc")) $notableFlag = "Tracking & Telemetry";
-      if (substr_count($in, "mal")) $notableFlag = "Malicious";
-      if (empty($in)) $notableFlag = "Unspecified Flag";
-    }
+  $in = NULL;
+  # Define "Featured Flag"
+  foreach ($listMatches as $num) {
+    # Create a string of flags for URL
+    if(in_array($urlList_match[$num], $suspicious)) $in .= "sus ";
+    if(in_array($urlList_match[$num], $advertising)) $in .= "ads ";
+    if(in_array($urlList_match[$num], $tracking)) $in .= "trc ";
+    if(in_array($urlList_match[$num], $malicious)) $in .= "mal ";
+    
+    # Return value of worst flag to user (EG: Malicious more notable than Suspicious)
+    if (substr_count($in, "sus")) $notableFlag = "Suspicious";
+    if (substr_count($in, "ads")) $notableFlag = "Advertising";
+    if (substr_count($in, "trc")) $notableFlag = "Tracking & Telemetry";
+    if (substr_count($in, "mal")) $notableFlag = "Malicious";
+    if (empty($in)) $notableFlag = "Unspecified Flag";
   }
-
-  echo "<!DOCTYPE html><head>
-      <meta charset='UTF-8'/>
-      <title>Website Blocked</title>
-      <link rel='stylesheet' href='https://wally3k.github.io/style/pihole.css'/>
-      <link rel='shortcut icon' href='https://raw.githubusercontent.com/pi-hole/AdminLTE/master/img/favicon.png' type='image/png'/>
-      <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'/>
-      <meta name='robots' content='noindex,nofollow'/>
-    </head><body><header id='block'>
-      <h1><a href='/'>Website Blocked</a></h1>
-    </header><main>
-    <div class='blocked'>
-      Access to the following site has been blocked:<br/>
-      <span class='phmsg'>$serverName</span>
-      This is primarily due to being flagged as:<br/>
-      <span class='phmsg'>$notableFlag</span>
-      If you have an ongoing use for this website, please <a href='mailto:$adminEmail?subject=Site Blocked: $serverName'>ask to have it whitelisted</a>.
-    </div>
-    <div class='buttons'><a class='safe' href='javascript:history.back()'>Back to safety</a>
-  ";
-
-  # More Information, for the technically inclined
-  if ($uriType == "more" && $featuredTotal != "0") {
-    # Remove pihole=more string for hyperlink
-    $uriStrip = preg_replace("/.pihole=more/", "", $_SERVER['REQUEST_URI']);
-    echo "&nbsp;<a class='warn' href='http://$serverName$uriStrip'>Less Info</a></div>";
-    echo "<br/><div>This site is found in $featuredTotal of $totalLists .domains ".(count($listMatches) == 1 ? 'list' : 'lists').": ".implode(', ', $listMatches)."</div>";
-    echo "<div class='more'>";
-    foreach ($listMatches as $num) {
-      echo "  [$num]: <a href='$urlList[$num]'>$urlList[$num]</a><br/>";
-    }
-    echo "</div>";
-  }elseif ($featuredTotal != "0") {
-    # Strip query string for hyperlink
-    $uriStrip = preg_replace("/\?.*/", "", $_SERVER['REQUEST_URI']);
-    echo "&nbsp;<a class='warn' href='http://$serverName$uriStrip?pihole=more'>More Info</a></div>";
-  }
-
-  echo "  
-    </main>
-    <footer>Generated ".date('D g:i A, M d')." by <a href='https://github.com/WaLLy3K/Pi-hole-Block-Page'>Pi-hole Block Page</a></footer>
-    </body></html>
-  ";
 }
 ?>
+
+<!DOCTYPE html><head>
+  <meta charset='UTF-8'/>
+  <title>Website Blocked</title>
+  <link rel='stylesheet' href='<?php echo $css; ?>'/>
+  <link rel='shortcut icon' href='<?php echo $favicon; ?>'/>
+  <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'/>
+  <meta name='robots' content='noindex,nofollow'/>
+  <script src="http://pi.hole/admin/scripts/vendor/jquery.min.js"></script>
+  <script>
+    function tgVis(id) {
+      var e = document.getElementById('querylist');
+      if(e.style.display == 'block') {
+        e.style.display = 'none';
+        document.getElementById("info").innerHTML = "More Info";
+      }else{
+        e.style.display = 'block';
+        document.getElementById("info").innerHTML = "Less Info";
+      }
+      
+    }
+  </script>
+  <style>
+    header h1:before, header h1:after { background-image: url('<?php echo $logo; ?>'); }
+  </style>
+</head><body><header>
+  <h1><a href='/'>Website Blocked</a></h1>
+</header><main>
+
+  <div class="url">
+    Access to the following site has been blocked:
+    <span class="msg"><?php echo $serverName; ?></span>
+  </div>
+  <div class="flag">
+    This is primarily due to being flagged as:
+    <span class='msg'><?php echo $notableFlag; ?></span>
+  </div>
+  <div class="notice">
+    If you have an ongoing use for this website, please <a href='<?php echo "mailto:$adminEmail?subject=Site Blocked: $serverName"; ?>'>ask to have it whitelisted</a>.
+  </div>
+  
+  <div class='buttons'>
+    <a id='back' href='javascript:history.back()'>Back to safety</a>
+    <?php if ($featuredTotal != "0") echo "<a id='info' onclick='tgVis(\"querylist\");'>More Info</a>"; ?>
+  </div> 
+  <div id='querylist' style='display: none;'>This site is found in <?php echo "$featuredTotal of $totalLists"; ?> lists:
+    <pre id='output'><?php foreach ($listMatches as $num) { echo "[$num]:\t<a href='$urlList[$num]'>$urlList[$num]</a><br/>"; } ?></pre>
+    <?php if ($allowWhitelisting == "true") { echo "
+    <form class='buttons'>
+      <input id='domain' value='$serverName' disabled>
+      <input type='password' id='pw' name='pw' placeholder='Pi-hole Password'/>
+      <button id='whitelist' type='button'>Whitelist</button>
+     </form>
+     <pre id='notification' hidden='true'></pre>
+     ";} ?>
+  </div>
+</main>
+<footer>Generated <?php echo date('D g:i A, M d'); ?> by <a href='https://github.com/WaLLy3K/Pi-hole-Block-Page'>Pi-hole Block Page</a></footer>
+<script>
+  function add() {
+    var domain = $("#domain");
+    var pw = $("#pw");
+    if(domain.val().length === 0){
+      return;
+    }
+
+    $.ajax({
+      url: "admin/scripts/pi-hole/php/add.php",
+      method: "post",
+      data: {"domain":domain.val(), "list":"white", "pw":pw.val()},
+      success: function(response) {
+        $( "#notification" ).removeAttr( "hidden" );
+        if(response.indexOf("Pi-hole blocking") !== -1){
+          // Reload page after 5 seconds
+          setTimeout(function(){window.location.reload(1);}, 5000);
+          $( "#notification" ).html("Success! You may have to flush your DNS cache");
+        }else{
+          $( "#notification" ).html(""+response+"");
+        }
+
+      },
+      error: function(jqXHR, exception) {
+        $( "#notification" ).removeAttr( "hidden" );
+        $( "#notification" ).html("Unknown Error");
+      }
+    });
+  }
+  // Handle enter button for adding domains
+  $(document).keypress(function(e) {
+      if(e.which === 13 && $("#pw").is(":focus")) {
+          add();
+      }
+  });
+
+  // Handle buttons
+  $("#whitelist").on("click", function() {
+      add();
+  });
+</script>
+</body></html>
