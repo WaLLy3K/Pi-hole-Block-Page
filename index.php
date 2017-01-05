@@ -73,25 +73,47 @@ $malicious = array(
 if (file_exists("/var/phbp.php")) include "/var/phbp.php";
 
 // Merge custom flagTypes with default flagTypes
-if (isset($suspicious_custom)) $suspicious = array_merge($suspicious, $suspicious_custom);
-if (isset($advertising_custom)) $advertising = array_merge($advertising, $advertising_custom);
-if (isset($tracking_custom)) $tracking = array_merge($tracking, $tracking_custom);
-if (isset($malicious_custom)) $malicious = array_merge($malicious, $malicious_custom);
+if (!empty($suspicious_custom)) $suspicious = array_merge($suspicious, $suspicious_custom);
+if (!empty($advertising_custom)) $advertising = array_merge($advertising, $advertising_custom);
+if (!empty($tracking_custom)) $tracking = array_merge($tracking, $tracking_custom);
+if (!empty($malicious_custom)) $malicious = array_merge($malicious, $malicious_custom);
 
 // Default Config Options
-if (!isset($css)) $css = "https://wally3k.github.io/style/pihole.css"; // Default CSS
-if (!isset($favicon)) $favicon = "/admin/img/favicon.png"; // Default Favicon
-if (!isset($logo)) $logo = "https://wally3k.github.io/style/phv.svg"; // Default Logo
-if (!isset($blockedImage)) $blockImage = "https://wally3k.github.io/style/blocked.svg"; // Default Block Image
+if (empty($selfDomain)) $selfDomain = NULL;
+if (empty($customCss)) $customCss = "https://wally3k.github.io/style/pihole.css"; // Default CSS
+if (empty($customIcon)) $customIcon = "/admin/img/favicon.png"; // Default Favicon
+if (empty($customLogo)) $customLogo = "https://wally3k.github.io/style/phv.svg"; // Default Logo
+if (empty($blockImage)) $blockImage = "https://wally3k.github.io/style/blocked.svg"; // Default Block Image
 
-// Define which URL extensions get rendered as "Website Blocked"
-// Index files should always be rendered as "Website Blocked" anyway
-$webRender = array("asp", "htm", "html", "php", "rss", "xml");
+// Default: Blank GIF Enabled
+if (!isset($blankGif) || $blankGif == "true" || $blankGif == "1") {
+  $blankGif = "true";
+}else{
+  $blankGif = "false";
+} 
+
+// Default: Allow whitelisting
+if (!isset($allowWhitelisting) || $allowWhitelisting == "true" || $allowWhitelisting == "1") { 
+  $allowWhitelisting = "true";
+}else{
+  $allowWhitelisting = "false";
+}
 
 // "Should" prevent arbitrary commands from being run as www-data when using wget
 $serverName = escapeshellcmd($_SERVER['SERVER_NAME']);
 
-// Retrieve server URI extension (EG: jpg, exe, php)
+// Email address config option
+if (!empty($adminEmail)) {
+  $noticeStr = "<a href='mailto:$adminEmail?subject=Site Blocked: $serverName'>ask to have it whitelisted</a>";
+}else{
+  $noticeStr = "ask the owner of the Pi-hole in your network to have it whitelisted";
+}
+
+// Define which URI extensions get rendered as "Website Blocked"
+// Index files should always be rendered as "Website Blocked" anyway
+$webRender = array("asp", "htm", "html", "php", "rss", "xml");
+
+// Retrieve serverName URI extension (EG: jpg, exe, php)
 $uriExt = pathinfo($_SERVER['REQUEST_URI'], PATHINFO_EXTENSION);
 
 // Handle type of block page
@@ -103,9 +125,9 @@ if ($serverName == "pi.hole") {
   exit();
 }elseif (in_array($uriExt, $webRender)) {
   // Valid URL extension to render as "Website Blocked"
-}elseif (substr_count($_SERVER['REQUEST_URI'], "?") && isset($_SERVER['HTTP_REFERER'])) {
+}elseif (substr_count($_SERVER['REQUEST_URI'], "?") && isset($_SERVER['HTTP_REFERER']) && $blankGif == "true") {
   // Serve a 1x1 blank gif to POTENTIAL iframe with query string
-  die('<img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">');
+  die("<img src='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'>");
 }elseif (!empty($uriExt) || substr_count($_SERVER['REQUEST_URI'], "?")) {
   // Invalid URL extension or non-iframed query string
   die('<head><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/></head><img src="'.$blockImage.'"/>');
@@ -114,6 +136,17 @@ if ($serverName == "pi.hole") {
 // Some error handling
 if (empty(glob("/etc/pihole/*domains"))) die("[ERROR]: There are no blacklists in the Pi-hole folder! Please update the list of ad-serving domains.");
 if (!file_exists("/etc/pihole/adlists.list")) die("[ERROR]: There is no 'adlists.list' in the Pi-hole folder!");
+
+// Crudely check for update
+function checkUpdate() {
+  global $ignoreUpdate;
+  if (!empty($ignoreUpdate)) {
+    $localIndex = hash_file('crc32', __FILE__);
+    $remoteIndex = hash_file('crc32', 'https://raw.githubusercontent.com/WaLLy3K/Pi-hole-Block-Page/master/index.php');
+    if (empty($remoteIndex)) return; // In case retrieval fails
+    if ($localIndex !== $remoteIndex) echo " (Update available)";
+  }
+}
 
 // Get all URLs starting with "http" from adlists.list
 // $urlList array key expected to match .domains list // in $listMatches!!
@@ -124,19 +157,25 @@ $urlList = array_values(preg_grep("/(^http)|(^www)/i", file("/etc/pihole/adlists
 $urlList_match = preg_replace("/https?\:\/\/(www.)?/i", "", $urlList);
 
 // Exact search, returning a numerically sorted # list of matching .domains
-exec('wget -qO - "http://pi.hole/admin/scripts/pi-hole/php/queryads.php?domain="'.$serverName.'"&exact" | grep -E ".domains.*\([1-9]" | cut -d. -f2 | sort -un', $listMatches);
+// Returns "txt" if manually blacklisted
+exec('wget -qO - "http://pi.hole/admin/scripts/pi-hole/php/queryads.php?domain="'.$serverName.'"&exact" | grep -E "(\.domains|blacklist\.txt).*\([1-9]" | awk -F "[\/ \.]" \'{print $7}\' | sort -un', $listMatches);
 
-// Return how many lists URL is featured in
-$featuredTotal = count(array_values(array_unique($listMatches)));
+// Return how many lists serverName is featured in
+if (in_array("txt", $listMatches)) {
+  $featuredTotal = "-1";
+}else{
+  $featuredTotal = count(array_values(array_unique($listMatches)));
+}
 
-// Featured total will be 0 for a manually blacklisted site
-if ($featuredTotal == "0") {
+if ($featuredTotal == "-1") {
     $notableFlag = "Blacklisted manually";
+}elseif ($featuredTotal == "0") {
+    $notableFlag = "No landing page specified";
 }else{
   $in = NULL;
   // Define "Featured Flag"
   foreach ($listMatches as $num) {
-    // Create a string of flags for URL
+    // Create a string of flags for serverName
     if(in_array($urlList_match[$num], $suspicious)) $in .= "sus ";
     if(in_array($urlList_match[$num], $advertising)) $in .= "ads ";
     if(in_array($urlList_match[$num], $tracking)) $in .= "trc ";
@@ -156,8 +195,8 @@ if ($featuredTotal == "0") {
 <!DOCTYPE html><head>
   <meta charset='UTF-8'/>
   <title>Website Blocked</title>
-  <link rel='stylesheet' href='<?php echo $css; ?>'/>
-  <link rel='shortcut icon' href='<?php echo $favicon; ?>'/>
+  <link rel='stylesheet' href='<?php echo $customCss; ?>'/>
+  <link rel='shortcut icon' href='<?php echo $customIcon; ?>'/>
   <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'/>
   <meta name='robots' content='noindex,nofollow'/>
   <script src="http://pi.hole/admin/scripts/vendor/jquery.min.js"></script>
@@ -174,8 +213,12 @@ if ($featuredTotal == "0") {
     }
   </script>
   <style>
-    header h1:before, header h1:after { background-image: url('<?php echo $logo; ?>'); }
+    header h1:before, header h1:after { background-image: url('<?php echo $customLogo; ?>'); }
   </style>
+  <noscript><style>
+    #querylist { display: block; }
+    .buttons { display: none; }
+  </style></noscript>
 </head><body><header>
   <h1><a href='/'>Website Blocked</a></h1>
 </header><main>
@@ -190,7 +233,7 @@ if ($featuredTotal == "0") {
   </div>
   <?php } ?>
   <div class="notice">
-    If you have an ongoing use for this website, please <a href='<?php echo "mailto:$adminEmail?subject=Site Blocked: $serverName"; ?>'>ask to have it whitelisted</a>.
+    If you have an ongoing use for this website, please <?php echo $noticeStr; ?>.
   </div>
   <div class='buttons'>
     <a id='back' href='javascript:history.back()'>Back to safety</a>
@@ -208,7 +251,7 @@ if ($featuredTotal == "0") {
      <?php } ?>
   </div>
 </main>
-<footer>Generated <?php echo date("D g:i A, M d"); ?> by <a href='https://github.com/WaLLy3K/Pi-hole-Block-Page'>Pi-hole Block Page</a></footer>
+<footer>Generated <?php echo date("D g:i A, M d"); ?> by <a href='https://github.com/WaLLy3K/Pi-hole-Block-Page'>Pi-hole Block Page</a><?php //checkUpdate(); ?></footer>
 <script>
   function add() {
     var domain = $("#domain");
@@ -234,7 +277,8 @@ if ($featuredTotal == "0") {
       },
       error: function(jqXHR, exception) {
         $( "#notification" ).removeAttr( "hidden" );
-        $( "#notification" ).html("Unknown Error");
+        // Assume javascript is enabled, but external files are being blocked (EG: Noscript/Scriptsafe)
+        $( "#notification" ).html("Unable to load external jQuery script");
       }
     });
   }
