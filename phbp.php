@@ -11,20 +11,23 @@ $adminEmail = "admin@domain.com";
 # What is the name of your domain, if any? (EG: subdomain.domain.com)
 $selfDomain = "";
 
-# Should we allow users to whitelist from the block page, with the correct password?
-$allowWhitelisting = "true";
-
 # What is the URL for your preferred Style Sheet?
-#$css = "https://wally3k.github.io/style/pihole.css";
+#$customCss = "https://wally3k.github.io/style/pihole.css";
 
 # What is the URL for your preferred Favicon?
-#$favicon = "http://pi.hole/admin/img/favicon.png";
+#$customIcon = "http://pi.hole/admin/img/favicon.png";
 
 # What is the URL for your preferred Logo?
-#$logo = "https://wally3k.github.io/style/phv.svg";
+#$customLogo = "https://wally3k.github.io/style/phv.svg";
 
 # What is the URL for your preferred "Blocked by Pi-hole" image?
 #$blockImage = "https://wally3k.github.io/style/blocked.svg";
+
+# Should we show a 1x1 blank GIF for iframes from blocked domains?
+#$blankGif = "false";
+
+# Should we allow users to whitelist from the block page, with the correct password?
+#$allowWhitelisting = "false";
 
 # Please add any domains here that has been manually placed in adlists.list
 # Do not include HTTP/HTTPS/WWW or trailing slash
