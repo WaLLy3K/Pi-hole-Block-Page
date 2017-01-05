@@ -29,6 +29,9 @@ $selfDomain = "";
 # Should we allow users to whitelist from the block page, with the correct password?
 #$allowWhitelisting = "false";
 
+# Do not show that an update is available
+#$ignoreUpdate = "true";
+
 # Please add any domains here that has been manually placed in adlists.list
 # Do not include HTTP/HTTPS/WWW or trailing slash
 $suspicious_custom = array(
