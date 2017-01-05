@@ -84,6 +84,7 @@ if (empty($customCss)) $customCss = "https://wally3k.github.io/style/pihole.css"
 if (empty($customIcon)) $customIcon = "/admin/img/favicon.png"; // Default Favicon
 if (empty($customLogo)) $customLogo = "https://wally3k.github.io/style/phv.svg"; // Default Logo
 if (empty($blockImage)) $blockImage = "https://wally3k.github.io/style/blocked.svg"; // Default Block Image
+if (empty($ignoreUpdate)) $ignoreUpdate = NULL;
 
 // Default: Blank GIF Enabled
 if (!isset($blankGif) || $blankGif == "true" || $blankGif == "1") {
@@ -140,7 +141,7 @@ if (!file_exists("/etc/pihole/adlists.list")) die("[ERROR]: There is no 'adlists
 // Crudely check for update
 function checkUpdate() {
   global $ignoreUpdate;
-  if (!empty($ignoreUpdate)) {
+  if (!isset($ignoreUpdate) || $ignoreUpdate == "false" || $ignoreUpdate == "0") {
     $localIndex = hash_file('crc32', __FILE__);
     $remoteIndex = hash_file('crc32', 'https://raw.githubusercontent.com/WaLLy3K/Pi-hole-Block-Page/master/index.php');
     if (empty($remoteIndex)) return; // In case retrieval fails
@@ -251,7 +252,7 @@ if ($featuredTotal == "-1") {
      <?php } ?>
   </div>
 </main>
-<footer>Generated <?php echo date("D g:i A, M d"); ?> by <a href='https://github.com/WaLLy3K/Pi-hole-Block-Page'>Pi-hole Block Page</a><?php //checkUpdate(); ?></footer>
+<footer>Generated <?php echo date("D g:i A, M d"); ?> by <a href='https://github.com/WaLLy3K/Pi-hole-Block-Page'>Pi-hole Block Page</a><?php checkUpdate(); ?></footer>
 <script>
   function add() {
     var domain = $("#domain");
