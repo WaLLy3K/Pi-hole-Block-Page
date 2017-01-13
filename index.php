@@ -1,7 +1,7 @@
 <?php
 // Pi-hole Block Page: Show "Website Blocked" on blacklisted domains
 // by WaLLy3K 06SEP16 for Pi-hole
-$phbpVersion = "2.1.0";
+$phbpVersion = "2.1.1";
 
 // Retrieve local custom configuration
 $phbpConfig = (is_file("/var/phbp.ini") ? "TRUE" : "FALSE");
@@ -159,6 +159,7 @@ if ($listMatches[0] == "list") {
   $featuredTotal = "-1";
 }else{
   $featuredTotal = count($listMatches);
+  if(empty($featuredTotal)) $featuredTotal = 0;
 }
 
 // Error correction (EG: If gravity has been updated and adlists.list has been removed)
@@ -166,10 +167,12 @@ if ($featuredTotal > $urlListCount) $featuredTotal = "0";
 
 if ($featuredTotal == "-1") {
     $notableFlag = "Blacklisted manually";
-}elseif ($landPage == "FALSE" && $featuredTotal == "0") {
-    $notableFlag = "No landing page specified";
 }elseif (!isset($listMatches) && $featuredTotal == "0") {
     $notableFlag = "Unable to retrieve or parse query results from Pi-hole API";
+}elseif ($landPage == "FALSE" && $featuredTotal == "0") {
+    $notableFlag = "No landing page specified within PHBP config";
+}elseif ($landPage !== "FALSE" && $featuredTotal == "0") {
+    $notableFlag = "No domain specified within PHBP config";
 }elseif ($featuredTotal >= "1") {
   $in = NULL;
   // Define "Featured Flag"
