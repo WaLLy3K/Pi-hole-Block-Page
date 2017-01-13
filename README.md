@@ -6,9 +6,9 @@ The goal is to provide concise and relevant feedback to the end user, so they ar
 
 When a user browses to a blacklisted domain (For example, `doubleclick.net`), they will be presented with the block page (*as pictured below*). As an Internet connection is generally shared with a number of other people (and not just the person who set up Pi-hole on the network), this provides excellent visual feedback showing them what domain was blocked, what the most "notable" list it was featured in, and how they can go about resolving the issue (by emailing the Pi-hole admin).
 
-In this case, `doubleclick.net` was found in `https://s3.amazonaws.com/lists.disconnect.me/simple_malvertising.txt` which I have classed as Malicious.
+In this case, `doubleclick.net` was found in `https://s3.amazonaws.com/lists.disconnect.me/simple_malvertising.txt` which I have classed as Tracking & Telemetry.
 
-![Pi-hole Block Page](http://i.imgur.com/vrjiy6R.png)
+![Pi-hole Block Page](http://i.imgur.com/t30mis4.png)
 
 When one attempts to access any non HTML resource (IE: not HTML, PHP, XML or RSS), the page will interpret this request as a "file" and will show the following image:
 
@@ -16,17 +16,21 @@ When one attempts to access any non HTML resource (IE: not HTML, PHP, XML or RSS
 
 If the blockpage is accessed through an iframe, a 1x1 transparent GIF ~~will~~ should be shown.
 
-## Install:
+If the admin has specified a landing page and a user browses to the Pi's IP address (or domain, if set within PHBP's config), they will be directed to the configured page.
+
+## Install & Update:
 **DISCLAIMER:** While these instructions have been tested for my own setup, they have not been verified on any other build. While it shouldn't break, be prepared to troubleshoot if necessary.
 
 
 ````
 html=$(grep server.document-root /etc/lighttpd/lighttpd.conf | awk -F\" '{print $2}')
 sudo wget -q https://raw.githubusercontent.com/WaLLy3K/Pi-hole-Block-Page/master/index.php -O "$html/index.php"
-sudo wget -q https://raw.githubusercontent.com/WaLLy3K/Pi-hole-Block-Page/master/phbp.php -O "/var/phbp.php"
+sudo wget -q https://raw.githubusercontent.com/WaLLy3K/Pi-hole-Block-Page/master/phbp.ini -O "/var/phbp.ini"
 sudo chmod 755 "$html/index.php"
+[ -f "/var/phbp.php" ] && mv /var/phbp.php /var/phbp.old.BAK
+[ -f "/var/phbp.ini" ] && mv /var/phbp.ini /var/phbp.ini.BAK
 [ ! -d "/etc/lighttpd/conf-enabled" ] && sudo mkdir -m 755 /etc/lighttpd/conf-enabled
-echo -e '# Pi-hole "server.error-handler-404" override\nurl.rewrite-once = ( "pihole/index.php" => "/index.php" )' | sudo tee /etc/lighttpd/conf-enabled/phbp.conf
+[ ! -f "/etc/lighttpd/conf-enabled/phbp.conf" ] && echo -e '# Pi-hole "server.error-handler-404" override\nurl.rewrite-once = ( "pihole/index.php" => "/index.php" )' | sudo tee /etc/lighttpd/conf-enabled/phbp.conf
 sudo service lighttpd force-reload
 ````
 
@@ -36,13 +40,14 @@ This script will not presume where the default document-root is, as [installatio
 
 ````
 html=$(grep server.document-root /etc/lighttpd/lighttpd.conf | awk -F\" '{print $2}')
-sudo rm -rf $html/index.php /var/phbp.php /etc/lighttpd/conf-enabled/phbp.conf
+sudo rm -rf $html/index.php /var/phbp.ini /etc/lighttpd/conf-enabled/phbp.conf
 sudo service lighttpd force-reload
 ````
 
 ## Website Test Cases:
 
 * http://192.168.1.x (Raspberry Pi IP) -- landing page
+* http://pi.domain.com (If custom domain set within config) -- landing page
 * http://pi.hole -- redirect to Pi-hole Admin Interface
 * http://doubleclick.net/ -- site
 * http://doubleclick.net/some/folder -- site
