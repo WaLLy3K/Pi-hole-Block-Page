@@ -1,110 +1,103 @@
 <?php
 // Pi-hole Block Page: Show "Website Blocked" on blacklisted domains
 // by WaLLy3K 06SEP16 for Pi-hole
+$phbpVersion = "2.1.0";
 
-// Define "flagType" of indivudual adlists.list URLs
-// TODO: This could be done better
-$suspicious = array(
-  "raw.githubusercontent.com/AdAway/adaway.github.io/master/hosts.txt",
-  "raw.githubusercontent.com/StevenBlack/hosts/master/hosts",
-  "adblock.gjtech.net/?format=unix-hosts",
-  "sysctl.org/cameleon/hosts",
-  "hosts-file.net/ad_servers.txt",
-  "adblock.mahakala.is",
-  "raw.githubusercontent.com/crazy-max/WindowsSpyBlocker/master/data/hosts/win10/spy.txt",
-  "securemecca.com/Downloads/hosts.txt",
-  "raw.githubusercontent.com/BreakingTheNews/BreakingTheNews.github.io/master/hosts",
-  "raw.githubusercontent.com/Dawsey21/Lists/master/main-blacklist.txt",
-  "raw.github.com/notracking/hosts-blocklists/master/hostnames.txt",
-  "raw.github.com/notracking/hosts-blocklists/master/domains.txt",
-  "raw.githubusercontent.com/mat1th/Dns-add-block/master/hosts",
-  "bitbucket.org/ethanr/dns-blacklists/raw/8575c9f96e5b4a1308f2f12394abd86d0927a4a0/bad_lists/hosts.txt",
-  "bitbucket.org/ethanr/dns-blacklists/raw/8575c9f96e5b4a1308f2f12394abd86d0927a4a0/bad_lists/dom-bl-base.txt",
-  "bitbucket.org/ethanr/dns-blacklists/raw/8575c9f96e5b4a1308f2f12394abd86d0927a4a0/bad_lists/Mandiant_APT1_Report_Appendix_D.txt",
-  "hostsfile.org/Downloads/hosts.txt",
-  "raw.githubusercontent.com/joeylane/hosts/master/hosts",
-  "winhelp2002.mvps.org/hosts.txt",
-  "hostsfile.mine.nu/hosts0.txt",
-  "raw.githubusercontent.com/piwik/referrer-spam-blacklist/master/spammers.txt",
-  "raw.githubusercontent.com/ReddestDream/reddestdream.github.io/master/Projects/MinimalHosts/etc/MinimalHostsBlocker/minimalhosts",
-  "raw.githubusercontent.com/StevenBlack/hosts/master/data/add.Dead/hosts",
-  "raw.githubusercontent.com/StevenBlack/hosts/master/data/KADhosts/hosts",
-  "someonewhocares.org/hosts/zero/hosts",
-  "raw.githubusercontent.com/vokins/yhosts/master/hosts",
-  "raw.githubusercontent.com/eladkarako/hosts.eladkarako.com/master/_raw__hosts.txt",
-);
+// Retrieve local custom configuration
+$phbpConfig = (is_file("/var/phbp.ini") ? "TRUE" : "FALSE");
 
-$advertising = array(
-  "s3.amazonaws.com/lists.disconnect.me/simple_ad.txt",
-  "optimate.dl.sourceforge.net/project/adzhosts/HOSTS.txt",
-  "raw.githubusercontent.com/quidsup/notrack/master/trackers.txt",
-  "pgl.yoyo.org/adservers/serverlist.php?hostformat=nohtml",
-  "raw.githubusercontent.com/StevenBlack/hosts/master/data/UncheckyAds/hosts",
-  "raw.githubusercontent.com/StevenBlack/hosts/master/data/SpotifyAds/hosts",
-);
+// Strip HTTP/HTTPS/WWW and final / for URL matching
+$strip = "/(https?:\/\/)|(www\.)|(\/$)/i";
 
-$tracking = array(
-  "s3.amazonaws.com/lists.disconnect.me/simple_tracking.txt",
-  "raw.githubusercontent.com/crazy-max/WindowsSpyBlocker/master/data/hosts/win10/spy.txt",
-  "raw.githubusercontent.com/quidsup/notrack/master/trackers.txt",
-  "raw.githubusercontent.com/quidsup/notrack/master/trackers.txt",
-  "raw.githubusercontent.com/StevenBlack/hosts/master/data/add.2o7Net/hosts",
-  "raw.githubusercontent.com/StevenBlack/hosts/master/data/WindowsSpyBlocker/spy-win81/hosts",
-  "raw.githubusercontent.com/StevenBlack/hosts/master/data/WindowsSpyBlocker/spy-win10/hosts",
-  "raw.githubusercontent.com/StevenBlack/hosts/master/data/tyzbit/hosts",
-);
-
-$malicious = array(
-  "mirror1.malwaredomains.com/files/justdomains",
-  "s3.amazonaws.com/lists.disconnect.me/simple_malvertising.txt",
-  "zeustracker.abuse.ch/blocklist.php?download=domainblocklist",
-  "ransomwaretracker.abuse.ch/downloads/RW_DOMBL.txt",
-  "malwaredomains.lehigh.edu/files/domains.txt",
-  "hosts-file.net/emd.txt",
-  "hosts-file.net/exp.txt",
-  "mirror.cedia.org.ec/malwaredomains/immortal_domains.txt",
-  "malwaredomainlist.com/hostslist/hosts.txt",
-  "mirror.cedia.org.ec/malwaredomains/justdomains",
-  "raw.githubusercontent.com/quidsup/notrack/master/malicious-sites.txt",
-  "raw.githubusercontent.com/StevenBlack/hosts/master/data/add.Risk/hosts",
-);
-
-// External config options outside WWW/HTML folder
-if (file_exists("/var/phbp.php")) include "/var/phbp.php";
-
-// Merge custom flagTypes with default flagTypes
-if (!empty($suspicious_custom)) $suspicious = array_merge($suspicious, $suspicious_custom);
-if (!empty($advertising_custom)) $advertising = array_merge($advertising, $advertising_custom);
-if (!empty($tracking_custom)) $tracking = array_merge($tracking, $tracking_custom);
-if (!empty($malicious_custom)) $malicious = array_merge($malicious, $malicious_custom);
-
-// Default Config Options
-if (empty($selfDomain)) $selfDomain = NULL;
-if (empty($customCss)) $customCss = "https://wally3k.github.io/style/pihole.css"; // Default CSS
-if (empty($customIcon)) $customIcon = "/admin/img/favicon.png"; // Default Favicon
-if (empty($customLogo)) $customLogo = "https://wally3k.github.io/style/phv.svg"; // Default Logo
-if (empty($blockImage)) $blockImage = "https://wally3k.github.io/style/blocked.svg"; // Default Block Image
-if (empty($ignoreUpdate)) $ignoreUpdate = NULL;
-
-// Default: Blank GIF Enabled
-if (!isset($blankGif) || $blankGif == "true" || $blankGif == "1") {
-  $blankGif = "true";
-}else{
-  $blankGif = "false";
-} 
-
-// Default: Allow whitelisting
-if (!isset($allowWhitelisting) || $allowWhitelisting == "true" || $allowWhitelisting == "1") { 
-  $allowWhitelisting = "true";
-}else{
-  $allowWhitelisting = "false";
+if($phbpConfig == "TRUE") {
+  $usrIni = parse_ini_file("/var/phbp.ini", true);
+  
+  // Retrieve custom flagTypes from custom config
+  $ftGeneric_cust     = preg_replace("$strip", "", $usrIni["blocklists"]["suspicious"]);
+  $ftAdvertising_cust = preg_replace("$strip", "", $usrIni["blocklists"]["advertising"]);
+  $ftTracking_cust    = preg_replace("$strip", "", $usrIni["blocklists"]["tracking"]);
+  $ftMalicious_cust   = preg_replace("$strip", "", $usrIni["blocklists"]["malicious"]);
 }
 
-// "Should" prevent arbitrary commands from being run as www-data when using wget
-$serverName = escapeshellcmd($_SERVER['SERVER_NAME']);
+// Default Config Options
+$iniUrl             = (empty($usrIni["classFile"])        ? "https://raw.githubusercontent.com/WaLLy3K/wally3k.github.io/master/classification.ini" : $usrIni["classFile"]);
+$iniUpdateTime      = (empty($usrIni["classUpdateTime"])  ? "172800" : $usrIni["classUpdateTime"]); // Default: 48 hours
+$landPage           = (empty($usrIni["landpage"])         ? "FALSE" : $usrIni["landpage"]);
+$adminEmail         = (empty($usrIni["adminEmail"])       ? "FALSE" : $usrIni["adminEmail"]);
+$selfDomain         = (empty($usrIni["selfDomain"])       ? "FALSE" : $usrIni["selfDomain"]);
+$customCss          = (empty($usrIni["customCss"])        ? "https://wally3k.github.io/style/pihole.css" : $usrIni["customCss"]);
+$customIcon         = (empty($usrIni["customIcon"])       ? "/admin/img/favicon.png" : $usrIni["customIcon"]);
+$customLogo         = (empty($usrIni["customLogo"])       ? "https://wally3k.github.io/style/phv.svg" : $usrIni["customLogo"]);
+$blockImage         = (empty($usrIni["blockImage"])       ? "https://wally3k.github.io/style/blocked.svg" : $usrIni["blockImage"]);
+$blankGif           = (empty($usrIni["blankGif"])         ? "TRUE" : "FALSE"); // Unset Default: Enabled
+$blankGif           = ($blankGif == "FALSE" && in_array($usrIni["blankGif"]) ? "TRUE" : "FALSE"); // Default: Enabled
+$allowWhitelisting  = (empty($usrIni["allowWhitelisting"])? "TRUE" : "FALSE"); // Unset Default: Enabled
+$allowWhitelisting  = ($allowWhitelisting == "FALSE" && in_array($usrIni["allowWhitelisting"], array('false','FALSE','no','NO','0'), true) ? "FALSE" : "TRUE"); // Default: Enabled
+$ignoreUpdate       = (empty($usrIni["ignoreUpdate"])? "FALSE" : "TRUE"); // Unset Default: Disabled
+$ignoreUpdate       = ($ignoreUpdate == "TRUE" && in_array($usrIni["ignoreUpdate"], array('true','TRUE','yes','YES','1'), true) ? "TRUE" : "FALSE"); // Default: Disabled
+$exeTime            = (empty($usrIni["exeTime"])? "FALSE" : "TRUE"); // Unset Default: Disabled
+$exeTime            = ($exeTime == "TRUE" && in_array($usrIni["exeTime"], array('true','TRUE','yes','YES','1'), true) ? "TRUE" : "FALSE"); // Default: Disabled
+$usrIni = NULL; // Unset
+
+// Locally cache external definitions file
+$iniFile = basename("$iniUrl");
+
+function cache_ini($url) {
+  global $iniUpdateTime, $iniFile;
+  if (time() - filemtime("$iniFile") < $iniUpdateTime) return; // Recently updated, skip check
+  
+  $hostUrl = parse_url($url);
+  $hostHeader = @get_headers($url, 1);
+  $httpStatus = substr($hostHeader[0], 9, 3);
+  $hostETag = (isset($hostHeader["ETag"]) ? $hostHeader["ETag"] : "FALSE");
+  $hostLastmod = (isset($hostHeader["Last-Modified"]) ? strtotime($hostHeader["Last-Modified"]) : "FALSE");
+  $hostHeader = NULL;
+  $hostName = $hostUrl["scheme"]."://".$hostUrl["host"];
+  
+  if (empty($httpStatus))
+    die("Unable to retrieve '$iniFile'. The server '$hostName' was not found");
+  if (isset($httpStatus) && !in_array($httpStatus, array("200","301","302")))
+    die("Unable to retrieve '$iniFile'. The server '$hostName' returned the error code: $httpStatus");
+  if ($hostETag == "FALSE" && $hostLastmod == "FALSE")
+    die("Unable to store '$iniFile'. The server '$hostName' does not provide adequate headers for version control");
+  
+  // Hash ETag or Last-Modified with $url
+  $hostVersion = ($hostETag !== "FALSE" ? hash('crc32', '$hostETag.$url') : hash('crc32', '$hostLastmod.$url'));
+  if (is_file("$iniFile")) {
+    $cliVersion = substr(fgets(fopen($iniFile, 'r')), 2, -1);
+    if (empty($cliVersion)) die("Unable to read from '$iniFile'");
+    if ($cliVersion == $hostVersion) touch($iniFile); // Recently checked, skip future updates
+  }
+  
+  $hostFile = file("$url");
+  array_unshift($hostFile, "; $hostVersion\n"); // Place $hostVersion at top of config for version control
+  file_put_contents("$iniFile", $hostFile);
+}
+
+cache_ini($iniUrl);
+$ini = parse_ini_file("$iniFile", true);
+
+$latestVersion = $ini["blocklist"]["version"];
+$ftGeneric = preg_replace("$strip", "", $ini["blocklist"]["generic"]);
+$ftAdvertising = preg_replace("$strip", "", $ini["blocklist"]["advertising"]);
+$ftTracking = preg_replace("$strip", "", $ini["blocklist"]["tracking"]);
+$ftMalicious = preg_replace("$strip", "", $ini["blocklist"]["malicious"]);
+$ini = NULL; // Unset
+
+if ($phbpConfig == "TRUE") {
+  // Merge custom flagTypes with default flagTypes
+  if (!empty($ftGeneric_cust))      $ftGeneric = array_merge($ftGeneric, $ftGeneric_cust);
+  if (!empty($ftAdvertising_cust))  $ftAdvertising = array_merge($ftAdvertising, $ftAdvertising_cust);
+  if (!empty($ftTracking_cust))     $ftTracking = array_merge($ftTracking, $ftTracking_cust);
+  if (!empty($ftMalicious_cust))    $ftMalicious = array_merge($ftMalicious, $ftMalicious_cust);
+  $ftGeneric_cust = NULL; $ftAdvertising_cust = NULL; $ftTracking_cust = NULL; $ftMalicious_cust = NULL;
+}
+
+// Sanitise URL input
+$serverName = filter_var($_SERVER['SERVER_NAME'], FILTER_SANITIZE_SPECIAL_CHARS);
 
 // Email address config option
-if (!empty($adminEmail)) {
+if ($adminEmail !== "FALSE") {
   $noticeStr = "<a href='mailto:$adminEmail?subject=Site Blocked: $serverName'>ask to have it whitelisted</a>";
 }else{
   $noticeStr = "ask the owner of the Pi-hole in your network to have it whitelisted";
@@ -120,13 +113,13 @@ $uriExt = pathinfo($_SERVER['REQUEST_URI'], PATHINFO_EXTENSION);
 // Handle type of block page
 if ($serverName == "pi.hole") {
   header("Location: admin");
-}elseif (!empty($landPage) && $serverName == $_SERVER['SERVER_ADDR'] || !empty($landPage) && $serverName == $selfDomain) {
+}elseif ($landPage !== "FALSE" && $serverName == $_SERVER['SERVER_ADDR'] || $landPage !== "FALSE" && $serverName == $selfDomain) {
   // When browsing to RPi, redirect to custom landing page
   include $landPage;
   exit();
 }elseif (in_array($uriExt, $webRender)) {
   // Valid URL extension to render as "Website Blocked"
-}elseif (substr_count($_SERVER['REQUEST_URI'], "?") && isset($_SERVER['HTTP_REFERER']) && $blankGif == "true") {
+}elseif (substr_count($_SERVER['REQUEST_URI'], "?") && isset($_SERVER['HTTP_REFERER']) && $blankGif == "TRUE") {
   // Serve a 1x1 blank gif to POTENTIAL iframe with query string
   die("<img src='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'>");
 }elseif (!empty($uriExt) || substr_count($_SERVER['REQUEST_URI'], "?")) {
@@ -136,61 +129,66 @@ if ($serverName == "pi.hole") {
 
 // Some error handling
 if (empty(glob("/etc/pihole/*domains"))) die("[ERROR]: There are no blacklists in the Pi-hole folder! Please update the list of ad-serving domains.");
-if (!file_exists("/etc/pihole/adlists.list")) die("[ERROR]: There is no 'adlists.list' in the Pi-hole folder!");
+$adlist = (is_file("/etc/pihole/adlists.list") ? "/etc/pihole/adlists.list" : "adlists.default");
 
-// Crudely check for update
+// Check for update
 function checkUpdate() {
-  global $ignoreUpdate;
-  if (!isset($ignoreUpdate) || $ignoreUpdate == "false" || $ignoreUpdate == "0") {
-    $localIndex = hash_file('crc32', __FILE__);
-    $remoteIndex = hash_file('crc32', 'https://raw.githubusercontent.com/WaLLy3K/Pi-hole-Block-Page/master/index.php');
-    if (empty($remoteIndex)) return; // In case retrieval fails
-    if ($localIndex !== $remoteIndex) echo " (Update available)";
+  global $ignoreUpdate, $phbpVersion, $latestVersion;
+  if ($ignoreUpdate == "FALSE" && str_replace(".","", $latestVersion) > str_replace(".","", $phbpVersion)) {
+    echo " (Update available)";
   }
 }
 
-// Get all URLs starting with "http" from adlists.list
-// $urlList array key expected to match .domains list // in $listMatches!!
-// This may not work if admin updates gravity, and later inserts a new hosts URL at anywhere but the end before re-running gravity
-$urlList = array_values(preg_grep("/(^http)|(^www)/i", file("/etc/pihole/adlists.list", FILE_IGNORE_NEW_LINES)));
+// Get all URLs starting with "http" from $adlist
+// $urlList array key expected to match .domains list # in $listMatches!!
+// This may not work if admin updates gravity, and later inserts a new hosts URL at anywhere but the end
+$urlList = array_values(preg_grep("/(^http)|(^www)/i", file($adlist, FILE_IGNORE_NEW_LINES)));
+$urlListCount = count($urlList);
 
 // Strip any combo of HTTP, HTTPS and WWW
 $urlList_match = preg_replace("/https?\:\/\/(www.)?/i", "", $urlList);
 
-// Exact search, returning a numerically sorted # list of matching .domains
-// Returns "txt" if manually blacklisted
-exec('wget -qO - "http://pi.hole/admin/scripts/pi-hole/php/queryads.php?domain="'.$serverName.'"&exact" | grep -E "(\.domains|blacklist\.txt).*\([1-9]" | awk -F "[\/ \.]" \'{print $7}\' | sort -un', $listMatches);
+// Exact search, returning a numerically sorted array of matching .domains
+// Returns "list" if manually blacklisted
+$listMatches = preg_grep("/(\.domains|blacklist\.txt).*\([1-9]/", file("http://pi.hole/admin/scripts/pi-hole/php/queryads.php?domain=$serverName&exact"));
+$listMatches = preg_replace("/(data: ::: \/etc\/pihole\/.....)|(\.(.*)\s)/i", "", $listMatches);
+sort($listMatches, SORT_NUMERIC);
 
 // Return how many lists serverName is featured in
-if (in_array("txt", $listMatches)) {
+if ($listMatches[0] == "list") {
   $featuredTotal = "-1";
 }else{
-  $featuredTotal = count(array_values(array_unique($listMatches)));
+  $featuredTotal = count($listMatches);
 }
+
+// Error correction (EG: If gravity has been updated and adlists.list has been removed)
+if ($featuredTotal > $urlListCount) $featuredTotal = "0";
 
 if ($featuredTotal == "-1") {
     $notableFlag = "Blacklisted manually";
-}elseif ($featuredTotal == "0") {
+}elseif ($landPage == "FALSE" && $featuredTotal == "0") {
     $notableFlag = "No landing page specified";
-}else{
+}elseif (!isset($listMatches) && $featuredTotal == "0") {
+    $notableFlag = "Unable to retrieve or parse query results from Pi-hole API";
+}elseif ($featuredTotal >= "1") {
   $in = NULL;
   // Define "Featured Flag"
   foreach ($listMatches as $num) {
     // Create a string of flags for serverName
-    if(in_array($urlList_match[$num], $suspicious)) $in .= "sus ";
-    if(in_array($urlList_match[$num], $advertising)) $in .= "ads ";
-    if(in_array($urlList_match[$num], $tracking)) $in .= "trc ";
-    if(in_array($urlList_match[$num], $malicious)) $in .= "mal ";
+    if(in_array(strtolower($urlList_match[$num]), array_map('strtolower', $ftGeneric))) $in .= "sus ";
+    if(in_array(strtolower($urlList_match[$num]), array_map('strtolower', $ftAdvertising))) $in .= "ads ";
+    if(in_array(strtolower($urlList_match[$num]), array_map('strtolower', $ftTracking))) $in .= "trc ";
+    if(in_array(strtolower($urlList_match[$num]), array_map('strtolower', $ftMalicious))) $in .= "mal ";
     
     // Return value of worst flag to user (EG: Malicious more notable than Suspicious)
     if (substr_count($in, "sus")) $notableFlag = "Suspicious";
     if (substr_count($in, "ads")) $notableFlag = "Advertising";
     if (substr_count($in, "trc")) $notableFlag = "Tracking & Telemetry";
     if (substr_count($in, "mal")) $notableFlag = "Malicious";
-    
-    // Do not show primary flag if we are unable to find one
-    if (empty($in)) $notableFlag = "-1";
   }
+} else {
+  // Do not show primary flag if we are unable to find one
+  $notableFlag = "-1";
 }
 ?>
 <!DOCTYPE html><head>
@@ -238,11 +236,11 @@ if ($featuredTotal == "-1") {
   </div>
   <div class='buttons'>
     <a id='back' href='javascript:history.back()'>Back to safety</a>
-    <?php if ($featuredTotal != "0") echo "<a id='info' onclick='tgVis(\"querylist\");'>More Info</a>"; ?>
+    <?php if ($featuredTotal > "0") echo "<a id='info' onclick='tgVis(\"querylist\");'>More Info</a>"; ?>
   </div> 
-  <div id='querylist'>This site is found in <?php echo "$featuredTotal of ".count($urlList); ?> lists:
-    <pre id='output'><?php foreach ($listMatches as $num) { echo "[$num]:\t<a href='$urlList[$num]'>$urlList[$num]</a><br/>"; } ?></pre>
-    <?php if ($allowWhitelisting == "true") { ?>
+  <div id='querylist'>This site is found in <?php echo "$featuredTotal of $urlListCount"; ?> lists:
+    <pre id='output'><?php foreach ($listMatches as $num) { echo "<span>[$num]:</span><a href='$urlList[$num]'>$urlList[$num]</a><br/>"; } ?></pre>
+    <?php if ($allowWhitelisting == "TRUE") { ?>
     <form class='buttons'>
       <input id='domain' value='<?php echo $serverName; ?>' disabled>
       <input type='password' id='pw' name='pw' placeholder='Pi-hole Password'/>
@@ -252,7 +250,7 @@ if ($featuredTotal == "-1") {
      <?php } ?>
   </div>
 </main>
-<footer>Generated <?php echo date("D g:i A, M d"); ?> by <a href='https://github.com/WaLLy3K/Pi-hole-Block-Page'>Pi-hole Block Page</a><?php checkUpdate(); ?></footer>
+<footer>Generated <?php echo date("D g:i A"); ?> by <a href='https://github.com/WaLLy3K/Pi-hole-Block-Page'>Pi-hole Block Page</a> <?php checkUpdate(); if($exeTime == "TRUE") printf("<br/>Execution time: %.2fs\n", microtime(true)-$_SERVER["REQUEST_TIME_FLOAT"]); ?></footer>
 <script>
   function add() {
     var domain = $("#domain");
