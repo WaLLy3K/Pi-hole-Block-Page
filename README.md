@@ -77,4 +77,4 @@ sudo service lighttpd force-reload
  
 ## Postscript:
 
-I am more than happy to take on board suggestions and feature requests, through the [issues tracker](https://github.com/WaLLy3K/Pi-hole-Block-Page/issues). On top of this, you are welcome to modify and adapt this project as you see fit. However, please remember that the name 'Pi-hole', the vortex logo and Javascript whitelisting code remains property of [Pi-hole, LLC](https://pi-hole.net/).
+I am more than happy to take on board suggestions and feature requests, through the [issues tracker](https://github.com/WaLLy3K/Pi-hole-Block-Page/issues). On top of this, you are welcome to modify and adapt this project as you see fit. However, please remember that the name 'Pi-hole', the vortex logo, 'boxed-bg.jpg' and Javascript whitelisting code remains property of [Pi-hole, LLC](https://pi-hole.net/).
