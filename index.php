@@ -1,7 +1,16 @@
 <?php
 // Pi-hole Block Page: Show "Website Blocked" on blacklisted domains
 // by WaLLy3K 06SEP16 for Pi-hole
-$phbpVersion = "2.1.1";
+$phbpVersion = "2.1.2";
+
+// Debug PHBP
+$debug = (isset($_GET["debug"]) ? "TRUE" : "FALSE");
+if ($debug == "TRUE") {
+  echo "<pre>";
+  ini_set('display_errors', 1);
+  ini_set('display_startup_errors', 1);
+  error_reporting(E_ALL);
+}
 
 // Retrieve local custom configuration
 $phbpConfig = (is_file("/var/phbp.ini") ? "TRUE" : "FALSE");
@@ -30,7 +39,7 @@ $customIcon         = (empty($usrIni["customIcon"])       ? "/admin/img/favicon.
 $customLogo         = (empty($usrIni["customLogo"])       ? "https://wally3k.github.io/style/phv.svg" : $usrIni["customLogo"]);
 $blockImage         = (empty($usrIni["blockImage"])       ? "https://wally3k.github.io/style/blocked.svg" : $usrIni["blockImage"]);
 $blankGif           = (empty($usrIni["blankGif"])         ? "TRUE" : "FALSE"); // Unset Default: Enabled
-$blankGif           = ($blankGif == "FALSE" && in_array($usrIni["blankGif"]) ? "TRUE" : "FALSE"); // Default: Enabled
+$blankGif           = ($blankGif == "FALSE" && in_array($usrIni["blankGif"], array('true','TRUE','yes','YES','1'), true) ? "TRUE" : "FALSE"); // Default: Enabled
 $allowWhitelisting  = (empty($usrIni["allowWhitelisting"])? "TRUE" : "FALSE"); // Unset Default: Enabled
 $allowWhitelisting  = ($allowWhitelisting == "FALSE" && in_array($usrIni["allowWhitelisting"], array('false','FALSE','no','NO','0'), true) ? "FALSE" : "TRUE"); // Default: Enabled
 $ignoreUpdate       = (empty($usrIni["ignoreUpdate"])? "FALSE" : "TRUE"); // Unset Default: Disabled
@@ -94,7 +103,7 @@ if ($phbpConfig == "TRUE") {
 }
 
 // Sanitise URL input
-$serverName = filter_var($_SERVER['SERVER_NAME'], FILTER_SANITIZE_SPECIAL_CHARS);
+$serverName = filter_var($_SERVER["SERVER_NAME"], FILTER_SANITIZE_SPECIAL_CHARS);
 
 // Email address config option
 if ($adminEmail !== "FALSE") {
@@ -108,28 +117,35 @@ if ($adminEmail !== "FALSE") {
 $webRender = array("asp", "htm", "html", "php", "rss", "xml");
 
 // Retrieve serverName URI extension (EG: jpg, exe, php)
-$uriExt = pathinfo($_SERVER['REQUEST_URI'], PATHINFO_EXTENSION);
+$uriExt = pathinfo($_SERVER["REQUEST_URI"], PATHINFO_EXTENSION);
 
 // Handle type of block page
 if ($serverName == "pi.hole") {
   header("Location: admin");
-}elseif ($landPage !== "FALSE" && $serverName == $_SERVER['SERVER_ADDR'] || $landPage !== "FALSE" && $serverName == $selfDomain) {
+}elseif ($landPage !== "FALSE" && $serverName == $_SERVER["SERVER_ADDR"] || $landPage !== "FALSE" && $serverName == $selfDomain) {
   // When browsing to RPi, redirect to custom landing page
   include $landPage;
   exit();
-}elseif (in_array($uriExt, $webRender)) {
+}elseif (in_array($uriExt, $webRender) || $debug == "TRUE") {
   // Valid URL extension to render as "Website Blocked"
-}elseif (substr_count($_SERVER['REQUEST_URI'], "?") && isset($_SERVER['HTTP_REFERER']) && $blankGif == "TRUE") {
+}elseif (substr_count($_SERVER["REQUEST_URI"], "?") && isset($_SERVER["HTTP_REFERER"]) && $blankGif == "TRUE") {
   // Serve a 1x1 blank gif to POTENTIAL iframe with query string
   die("<img src='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'>");
-}elseif (!empty($uriExt) || substr_count($_SERVER['REQUEST_URI'], "?")) {
+}elseif (!empty($uriExt) || substr_count($_SERVER["REQUEST_URI"], "?")) {
   // Invalid URL extension or non-iframed query string
   die('<head><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/></head><img src="'.$blockImage.'"/>');
 }
 
 // Some error handling
-if (empty(glob("/etc/pihole/*domains"))) die("[ERROR]: There are no blacklists in the Pi-hole folder! Please update the list of ad-serving domains.");
-$adlist = (is_file("/etc/pihole/adlists.list") ? "/etc/pihole/adlists.list" : "adlists.default");
+if (empty(glob("/etc/pihole/*domains"))) die("[ERROR]: There are no blacklists in the Pi-hole folder! Please update the list of ad-serving domains by running pihole -g.");
+
+if (is_file("/etc/pihole/adlists.list")) {
+  $adlist = "/etc/pihole/adlists.list";
+} elseif (is_file("/etc/pihole/adlists.default")) {
+  $adlist = "/etc/pihole/adlists.default";
+} else {
+  die("[ERROR]: Neither 'adlists.list' or 'adlists.default' were found within /etc/pihole");
+}
 
 // Check for update
 function checkUpdate() {
@@ -145,25 +161,38 @@ function checkUpdate() {
 $urlList = array_values(preg_grep("/(^http)|(^www)/i", file($adlist, FILE_IGNORE_NEW_LINES)));
 $urlListCount = count($urlList);
 
+if ($urlListCount == 0) die("[ERROR]: There was an issue parsing adlist '$adlist': \$urlListCount returned no results");
+if ($debug == "TRUE") echo "[\$urlListCount] Total number of installed blocklists: $urlListCount\n";
+
 // Strip any combo of HTTP, HTTPS and WWW
 $urlList_match = preg_replace("/https?\:\/\/(www.)?/i", "", $urlList);
 
 // Exact search, returning a numerically sorted array of matching .domains
 // Returns "list" if manually blacklisted
 $listMatches = preg_grep("/(\.domains|blacklist\.txt).*\([1-9]/", file("http://pi.hole/admin/scripts/pi-hole/php/queryads.php?domain=$serverName&exact"));
+if ($debug == "TRUE") echo "[\$listMatches] Ad Query results: ".count($listMatches)."\n";
 $listMatches = preg_replace("/(data: ::: \/etc\/pihole\/.....)|(\.(.*)\s)/i", "", $listMatches);
 sort($listMatches, SORT_NUMERIC);
+if ($debug == "TRUE") echo "[\$listMatches] Sorted Ad Query numbers: ".implode(', ', $listMatches)."\n";
 
 // Return how many lists serverName is featured in
 if ($listMatches[0] == "list") {
+  if ($debug == "TRUE") { echo "[NOTICE]: Site appears to be manually blacklisted\n"; }
   $featuredTotal = "-1";
 }else{
   $featuredTotal = count($listMatches);
-  if(empty($featuredTotal)) $featuredTotal = 0;
+  if(empty($featuredTotal)) {
+    if ($debug == "TRUE") { echo "[ERROR]: Featured total list was empty\n"; }
+    $featuredTotal = 0;
+  }
 }
 
 // Error correction (EG: If gravity has been updated and adlists.list has been removed)
-if ($featuredTotal > $urlListCount) $featuredTotal = "0";
+if ($featuredTotal > $urlListCount) {
+  die("[ERROR]: Number of blocklists that site was featured in, was larger than the total number of lists in '$adlist'");
+}
+
+if ($debug == "TRUE") { echo "[\$featuredTotal] Featured Total: $featuredTotal\n"; }
 
 if ($featuredTotal == "-1") {
     $notableFlag = "Blacklisted manually";
@@ -193,6 +222,8 @@ if ($featuredTotal == "-1") {
   // Do not show primary flag if we are unable to find one
   $notableFlag = "-1";
 }
+
+if ($debug == "TRUE") { die("Debug output complete"); }
 ?>
 <!DOCTYPE html><head>
   <meta charset='UTF-8'/>
