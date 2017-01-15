@@ -14,7 +14,7 @@ When a user (or site on the user's behalf) attempts to access any non HTML resou
 
 ![Blocked by Pi-hole](https://wally3k.github.io/style/blocked.svg)
 
-If the 'Website Blocked' page is accessed through an iframe, a 1x1 transparent GIF will be shown, by default.
+If the 'Website Blocked' page is accessed through an iframe, a 1x1 transparent GIF will be shown (by default).
 
 Finally: If a landing page has been specified by the Pi-hole admin, a user will be direct to that page if they enter the Pi-hole IP address (or domain name, if configured).
 
@@ -28,7 +28,7 @@ Everyone has different needs! Therefore, the admin of the Pi-hole Block Page has
 * **Set an admin email**: When users come across the block page, they will be presented with a link to email the admin in case they want it whitelisted
 * **Set custom style sheet**: Not everyones sense of asthetics is the same
 * **Set custom favicon**: Change the bookmark icon to suit your needs
-* **Set custom logo**: Change the logo on the top right of the page to suit your needs
+* **Set custom logo**: Change the logo on the top left of the page to suit your needs
 * **Set block image**: Display an image of your choosing when a user comes across blocked 'file' content
 * **Display blank gif**: Choose whether iframed ads should display nothing, or the block image
 * **Allow whitelisting**: Choose whether users have the option to enter a password to whitelist a blocked page
