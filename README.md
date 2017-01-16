@@ -37,8 +37,7 @@ Everyone has different needs! Therefore, the admin of the Pi-hole Block Page has
 * **Definitions**: Add your own blocklist URLs and define if they are Suspicious, Advertising, Tracking or Malicious
 
 ## Install & Update:
-**DISCLAIMER:** While these instructions have been tested for my own setup, they have not been verified on any other build. While it shouldn't break, be prepared to troubleshoot if necessary.
-
+You will need to open up your preferred SSH client and enter the following commands:
 
 ````
 html=$(grep server.document-root /etc/lighttpd/lighttpd.conf | awk -F\" '{print $2}')
@@ -49,16 +48,19 @@ sudo chmod 755 "$html/index.php"
 [ -f "/var/phbp.ini" ] && mv /var/phbp.ini /var/phbp.ini.BAK
 [ ! -d "/etc/lighttpd/conf-enabled" ] && sudo mkdir -m 755 /etc/lighttpd/conf-enabled
 [ ! -f "/etc/lighttpd/conf-enabled/phbp.conf" ] && echo -e '# Pi-hole "server.error-handler-404" override\nurl.rewrite-once = ( "pihole/index.php" => "/index.php" )' | sudo tee /etc/lighttpd/conf-enabled/phbp.conf
+echo "Done! Please edit '/var/phbp.ini' to customise your install"
 sudo service lighttpd force-reload
 ````
 
 This script will not presume where the default document-root is, as [installations such as DietPi](https://github.com/Fourdee/DietPi/blob/master/dietpi/dietpi-software#L3552) are known to change this.
 
 ## Uninstall:
+If you would like to remove Pi-hole Block Page, you can enter the following via SSH:
 
 ````
 html=$(grep server.document-root /etc/lighttpd/lighttpd.conf | awk -F\" '{print $2}')
 sudo rm -rf $html/index.php /var/phbp.ini /etc/lighttpd/conf-enabled/phbp.conf
+[ -f "/var/phbp.ini.BAK" ] rm -f /var/phbp.ini.BAK
 sudo service lighttpd force-reload
 ````
 
@@ -68,6 +70,7 @@ sudo service lighttpd force-reload
 * http://192.168.1.x (Pi-hole IP) -- landing page, if defined
 * http://pi.domain.com (Pi-hole Domain) -- landing page, if defined
 * http://doubleclick.net/ -- Website Blocked
+* http://doubleclick.net/?debug -- Block Page Debug Output
 * http://doubleclick.net/some/folder -- Website Blocked
 * http://doubleclick.net/some/content.php -- Website Blocked
 * http://doubleclick.net/some/content.php?query=true -- Website Blocked
