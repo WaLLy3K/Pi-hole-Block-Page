@@ -71,12 +71,17 @@ sudo service lighttpd force-reload
 * http://pi.domain.com (Pi-hole Domain) -- landing page, if defined
 * http://doubleclick.net/ -- Website Blocked
 * http://doubleclick.net/?debug -- Block Page Debug Output
+* http://doubleclick.net/?debug=conf -- Block Page Debug Output (with redacted user config)
 * http://doubleclick.net/some/folder -- Website Blocked
 * http://doubleclick.net/some/content.php -- Website Blocked
 * http://doubleclick.net/some/content.php?query=true -- Website Blocked
 * http://doubleclick.net/file.exe -- Blocked by Pi-hole Image
 * http://doubleclick.net/some/image.gif -- Blocked by Pi-hole Image
  
+ 
+## Troubleshooting:
+If you are having *any* issues with Pi-hole Block Page, please open a [new ticket](https://github.com/WaLLy3K/Pi-hole-Block-Page/issues) so it can be checked out. If necessary, include the output of either `?debug` or `?debug=conf` (e.g: `http://doubleclick.net?debug=conf`).
+
  
 ## Postscript:
 
