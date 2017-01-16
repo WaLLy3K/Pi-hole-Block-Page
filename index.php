@@ -1,15 +1,19 @@
 <?php
 // Pi-hole Block Page: Show "Website Blocked" on blacklisted domains
 // by WaLLy3K 06SEP16 for Pi-hole
-$phbpVersion = "2.1.2";
+$phbpVersion = "2.1.3";
 
 // Debug PHBP
 $debug = (isset($_GET["debug"]) ? "TRUE" : "FALSE");
 if ($debug == "TRUE") {
+  // Print redacted user config if ?debug=conf used
+  $debugConf = (strpos($_GET["debug"], "conf") !== FALSE ? "TRUE" : "FALSE");
+  
   echo "<pre>";
   ini_set('display_errors', 1);
   ini_set('display_startup_errors', 1);
   error_reporting(E_ALL);
+  echo "</pre>";
 }
 
 // Retrieve local custom configuration
@@ -46,7 +50,17 @@ $ignoreUpdate       = (empty($usrIni["ignoreUpdate"])? "FALSE" : "TRUE"); // Uns
 $ignoreUpdate       = ($ignoreUpdate == "TRUE" && in_array($usrIni["ignoreUpdate"], array('true','TRUE','yes','YES','1'), true) ? "TRUE" : "FALSE"); // Default: Disabled
 $exeTime            = (empty($usrIni["exeTime"])? "FALSE" : "TRUE"); // Unset Default: Disabled
 $exeTime            = ($exeTime == "TRUE" && in_array($usrIni["exeTime"], array('true','TRUE','yes','YES','1'), true) ? "TRUE" : "FALSE"); // Default: Disabled
-$usrIni = NULL; // Unset
+if ($debugConf == "FALSE") $usrIni = NULL; // Unset
+
+// Config error handling
+if ($adminEmail !== "FALSE" && strpos($adminEmail, "@") == false) die ("[ERROR]: Admin email is in incorrect format: '$adminEmail'");
+
+function is_valid_domain_name($domain_name) { // Cr: http://bit.ly/2gnunOo
+  return (preg_match("/^([a-z\d](-*[a-z\d])*)(\.([a-z\d](-*[a-z\d])*))*$/i", $domain_name)
+    && preg_match("/^.{1,253}$/", $domain_name)
+    && preg_match("/^[^\.]{1,63}(\.[^\.]{1,63})*$/", $domain_name));
+}
+if ($selfDomain !== "FALSE" && !is_valid_domain_name($selfDomain)) die("[ERROR]: Configured domain name does not appear to be valid: '$selfDomain'");
 
 // Locally cache external definitions file
 $iniFile = basename("$iniUrl");
@@ -128,6 +142,7 @@ if ($serverName == "pi.hole") {
   exit();
 }elseif (in_array($uriExt, $webRender) || $debug == "TRUE") {
   // Valid URL extension to render as "Website Blocked"
+  if ($debug == "TRUE") echo "<pre>";
 }elseif (substr_count($_SERVER["REQUEST_URI"], "?") && isset($_SERVER["HTTP_REFERER"]) && $blankGif == "TRUE") {
   // Serve a 1x1 blank gif to POTENTIAL iframe with query string
   die("<img src='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'>");
@@ -137,7 +152,7 @@ if ($serverName == "pi.hole") {
 }
 
 // Some error handling
-if (empty(glob("/etc/pihole/*domains"))) die("[ERROR]: There are no blacklists in the Pi-hole folder! Please update the list of ad-serving domains by running pihole -g.");
+if (empty(glob("/etc/pihole/*domains"))) die("[ERROR]: There are no blacklists in the Pi-hole folder! Please update gravity by running pihole -g.");
 
 if (is_file("/etc/pihole/adlists.list")) {
   $adlist = "/etc/pihole/adlists.list";
@@ -160,9 +175,7 @@ function checkUpdate() {
 // This may not work if admin updates gravity, and later inserts a new hosts URL at anywhere but the end
 $urlList = array_values(preg_grep("/(^http)|(^www)/i", file($adlist, FILE_IGNORE_NEW_LINES)));
 $urlListCount = count($urlList);
-
 if ($urlListCount == 0) die("[ERROR]: There was an issue parsing adlist '$adlist': \$urlListCount returned no results");
-if ($debug == "TRUE") echo "[\$urlListCount] Total number of installed blocklists: $urlListCount\n";
 
 // Strip any combo of HTTP, HTTPS and WWW
 $urlList_match = preg_replace("/https?\:\/\/(www.)?/i", "", $urlList);
@@ -170,29 +183,24 @@ $urlList_match = preg_replace("/https?\:\/\/(www.)?/i", "", $urlList);
 // Exact search, returning a numerically sorted array of matching .domains
 // Returns "list" if manually blacklisted
 $listMatches = preg_grep("/(\.domains|blacklist\.txt).*\([1-9]/", file("http://pi.hole/admin/scripts/pi-hole/php/queryads.php?domain=$serverName&exact"));
-if ($debug == "TRUE") echo "[\$listMatches] Ad Query results: ".count($listMatches)."\n";
 $listMatches = preg_replace("/(data: ::: \/etc\/pihole\/.....)|(\.(.*)\s)/i", "", $listMatches);
-sort($listMatches, SORT_NUMERIC);
-if ($debug == "TRUE") echo "[\$listMatches] Sorted Ad Query numbers: ".implode(', ', $listMatches)."\n";
+@sort($listMatches, SORT_NUMERIC);
 
 // Return how many lists serverName is featured in
 if ($listMatches[0] == "list") {
-  if ($debug == "TRUE") { echo "[NOTICE]: Site appears to be manually blacklisted\n"; }
   $featuredTotal = "-1";
 }else{
   $featuredTotal = count($listMatches);
   if(empty($featuredTotal)) {
-    if ($debug == "TRUE") { echo "[ERROR]: Featured total list was empty\n"; }
+    if ($debug == "TRUE") { die("[ERROR]: Featured total list was empty"); }
     $featuredTotal = 0;
   }
 }
 
 // Error correction (EG: If gravity has been updated and adlists.list has been removed)
 if ($featuredTotal > $urlListCount) {
-  die("[ERROR]: Number of blocklists that site was featured in, was larger than the total number of lists in '$adlist'");
+  die("[ERROR]: The # of blocklists that site was featured in, was larger than the total number of lists in '$adlist'");
 }
-
-if ($debug == "TRUE") { echo "[\$featuredTotal] Featured Total: $featuredTotal\n"; }
 
 if ($featuredTotal == "-1") {
     $notableFlag = "Blacklisted manually";
@@ -218,12 +226,44 @@ if ($featuredTotal == "-1") {
     if (substr_count($in, "trc")) $notableFlag = "Tracking & Telemetry";
     if (substr_count($in, "mal")) $notableFlag = "Malicious";
   }
-} else {
-  // Do not show primary flag if we are unable to find one
-  $notableFlag = "-1";
 }
 
-if ($debug == "TRUE") { die("Debug output complete"); }
+// Do not show primary flag if we are unable to find one
+if(!isset($notableFlag)) $notableFlag = "-1";
+
+// Print debugging output
+if ($debug == "TRUE") {
+  echo basename($adlist)." has $urlListCount blocklists\n";
+  echo "Queryads.php returned ".count($listMatches)." results: '".implode(',', $listMatches)."'\n";
+  echo "Server '$serverName' was featured in $featuredTotal lists\n";
+  if ($featuredTotal >= "1") echo "Most notably tagged as $notableFlag\n";
+  
+  if ($debugConf == "TRUE") {
+    echo "\nUser Config ";
+    if ($adminEmail !== "FALSE") $usrIni["adminEmail"] = "user@redacted.com";
+    if ($selfDomain !== "FALSE") $usrIni["selfDomain"] = "redacted.com";
+    
+    // Do not return 'default' config entries
+    foreach($usrIni["blocklists"]["suspicious"] as $k => $v) if(strpos($v, "firebog")) unset($usrIni["blocklists"]["suspicious"]["$k"]);
+    foreach($usrIni["blocklists"]["advertising"] as $k => $v) if(strpos($v, "firebog")) unset($usrIni["blocklists"]["advertising"]["$k"]);
+    foreach($usrIni["blocklists"]["tracking"] as $k => $v) if(strpos($v, "firebog")) unset($usrIni["blocklists"]["tracking"]["$k"]);
+    foreach($usrIni["blocklists"]["malicious"] as $k => $v) if(strpos($v, "firebog")) unset($usrIni["blocklists"]["malicious"]["$k"]);
+
+    function array_remove_empty($arr) { // Cr: http://bit.ly/2jf0VMi
+      foreach ($arr as $k => $v) { 
+        if (is_array($v)) $arr[$k] = array_remove_empty($arr[$k]);
+        if (empty($arr[$k])) unset($arr[$k]);
+      }
+      return $arr;
+    }
+    $usrIni = array_remove_empty($usrIni);
+    
+    print_r($usrIni);
+  }
+  
+  printf("Debug output generated in %.2fs", microtime(true)-$_SERVER["REQUEST_TIME_FLOAT"]);
+  die();
+}
 ?>
 <!DOCTYPE html><head>
   <meta charset='UTF-8'/>
@@ -285,6 +325,8 @@ if ($debug == "TRUE") { die("Debug output complete"); }
   </div>
 </main>
 <footer>Generated <?php echo date("D g:i A"); ?> by <a href='https://github.com/WaLLy3K/Pi-hole-Block-Page'>Pi-hole Block Page</a> <?php checkUpdate(); if($exeTime == "TRUE") printf("<br/>Execution time: %.2fs\n", microtime(true)-$_SERVER["REQUEST_TIME_FLOAT"]); ?></footer>
+
+<?php // Cr: http://bit.ly/2irWj8d ?>
 <script>
   function add() {
     var domain = $("#domain");
