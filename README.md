@@ -25,15 +25,16 @@ Everyone has different needs! Therefore, the admin of the Pi-hole Block Page has
 * **Set the class file update time**: How often the definitions file will be checked for an update
 * **Set a landing page**: Use your Lighttpd install for something more than just Pi-hole
 * **Set a domain name**: If you have a website you'd like to make publicly facing, you can set your domain name and have it direct to the landing page
-* **Set an admin email**: When users come across the block page, they will be presented with a link to email the admin in case they want it whitelisted
-* **Set custom style sheet**: Not everyones sense of asthetics is the same
-* **Set custom favicon**: Change the bookmark icon to suit your needs
-* **Set custom logo**: Change the logo on the top left of the page to suit your needs
-* **Set block image**: Display an image of your choosing when a user comes across blocked 'file' content
 * **Display blank gif**: Choose whether iframed ads should display nothing, or the block image
+* **Set block image**: Display an image of your choosing when a user comes across blocked 'file' content
+* **Set custom favicon**: Change the bookmark icon to suit your needs
+* **Set custom style sheet**: Not everyones sense of asthetics is the same
+* **Set custom logo**: Change the logo on the top left of the page to suit your needs
+* **Set an admin email**: When users come across the block page, they will be presented with a link to email the admin in case they want it whitelisted
 * **Allow whitelisting**: Choose whether users have the option to enter a password to whitelist a blocked page
-* **Ignore updates**: Don't get notifications of updates (which would make me very sad)
+* **Check for updates**: Get notifications of updates
 * **Execution time**: Display how long it took to generate the 'Website Blocked' page
+* **Translations**: Customise almost all the text available on the 'Website Blocked' page
 * **Definitions**: Add your own blocklist URLs and define if they are Suspicious, Advertising, Tracking or Malicious
 
 ## Install & Update:
