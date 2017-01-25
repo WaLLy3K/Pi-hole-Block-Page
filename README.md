@@ -53,6 +53,8 @@ echo "Done! Please edit '/var/phbp.ini' to customise your install"
 sudo service lighttpd force-reload
 ````
 
+This persists between Pi-hole updates, so you will only need to re-perform these commands when you see "Update Available" in the footer of the block page.
+
 This script will not presume where the default document-root is, as [installations such as DietPi](https://github.com/Fourdee/DietPi/blob/master/dietpi/dietpi-software#L3552) are known to change this.
 
 ## Uninstall:
