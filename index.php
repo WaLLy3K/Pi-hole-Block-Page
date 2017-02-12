@@ -1,7 +1,7 @@
 <?php
 // Pi-hole Block Page: Show "Website Blocked" on blacklisted domains
 // by WaLLy3K 06SEP16 for Pi-hole
-$phbpVersion = "2.2.0";
+$phbpVersion = "2.2.1";
 
 // Debugging
 $debug = (isset($_GET["debug"]) ? true : false);
@@ -144,7 +144,7 @@ if (filter_var($iniUrl, FILTER_VALIDATE_URL) === false) die ("[ERROR]: User conf
 if (!is_numeric($iniUpdTime)) die ("[ERROR]: User config variable <i>classUpdateTime</i> is not a number: '$iniUpdTime'");
 if (!empty($adminEmail) && filter_var($adminEmail, FILTER_VALIDATE_EMAIL) === false) die ("[ERROR]: User config variable <i>adminEmail</i> is not valid: '$adminEmail'");
 
-// Retrieve configured flagTypes
+// Retrieve configured notableFlags
 $customGeneric     = preg_replace("$strip", "", $usrIni["blocklists"]["suspicious"]);
 $customAdvertising = preg_replace("$strip", "", $usrIni["blocklists"]["advertising"]);
 $customTracking    = preg_replace("$strip", "", $usrIni["blocklists"]["tracking"]);
@@ -161,7 +161,7 @@ $advertising  = preg_replace("$strip", "", $ini["blocklist"]["advertising"]);
 $tracking     = preg_replace("$strip", "", $ini["blocklist"]["tracking"]);
 $malicious    = preg_replace("$strip", "", $ini["blocklist"]["malicious"]);
 
-// Merge configured flagTypes with default flagTypes
+// Merge configured notableFlags with default notableFlags
 if (!empty($customGeneric))     $generic = array_merge($generic, $customGeneric);
 if (!empty($customAdvertising)) $advertising = array_merge($advertising, $customAdvertising);
 if (!empty($customTracking))    $tracking = array_merge($tracking, $customTracking);
@@ -464,6 +464,10 @@ function cache_ini($url, $fileName, $time) {
   $urlFile = file("$url");
   array_unshift($urlFile, "; $urlVersion\n"); // Place $urlVersion at top of local user config for version control
   file_put_contents("$fileName", $urlFile);
+  if (!is_file("$fileName")) {
+    $serverUser = ($_SERVER['USER'] ? $_SERVER['USER'] : "www-data");
+    die("[ERROR]: '$fileName' was unable to be written to folder: '".getcwd()."'<br/>Please chown your default HTML folder from Terminal so that it can be written to: <b>sudo chown \"$serverUser\" ".getcwd()."</b>");
+  }
   $urlFile = null;
 }
 
