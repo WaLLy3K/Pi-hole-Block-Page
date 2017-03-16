@@ -1,7 +1,7 @@
 <?php
 // Pi-hole Block Page: Show "Website Blocked" on blacklisted domains
 // by WaLLy3K 06SEP16 for Pi-hole
-$phbpVersion = "2.2.1";
+$phbpVersion = "2.3.0";
 
 // Debugging
 $debug = (isset($_GET["debug"]) ? true : false);
@@ -39,12 +39,16 @@ $lighttpdConf = (is_file("/etc/lighttpd/lighttpd.conf") ? file("/etc/lighttpd/li
 // Mobile Viewport String
 $viewPort = "<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'/>";
 
+// Server IP address
+$serverAddr = (array_key_exists('SERVER_ADDR',$_SERVER) ? $_SERVER['SERVER_ADDR'] : $_SERVER['LOCAL_ADDR']);
+if (empty($serverAddr)) die("[ERROR]: Unable to retrieve server IP address! SERVER_ADDR: '".$_SERVER['SERVER_ADDR']."', LOCAL_ADDR: '".$_SERVER['LOCAL_ADDR']."'");
+
 // Handle block page redirects
 if ($domainName == "pi.hole") {
   // Redirect user to Pi-hole Admin Console
   header("Location: /admin");
   exit();
-} elseif ($domainName == $_SERVER["SERVER_ADDR"] && $landPage || $domainName == $selfDomain && $landPage) {
+} elseif ($domainName == $serverAddr && $landPage || $domainName == $selfDomain && $landPage) {
   // Redirect IP addr, or configured selfDomain to custom landing page
   include $landPage;
   exit();
@@ -127,7 +131,9 @@ $bpAds      = (!isset($usrIni["advertisingText"]) ? "Advertising" : $usrIni["adv
 $bpTrc      = (!isset($usrIni["trackingText"])    ? "Tracking & Telemetry" : $usrIni["trackingText"]);
 $bpMal      = (!isset($usrIni["maliciousText"])   ? "Malicious" : $usrIni["maliciousText"]);
 $bpBlk      = (!isset($usrIni["blacklistText"])   ? "Manually Blacklisted" : $usrIni["blacklistText"]);
+$bpBlkW     = (!isset($usrIni["blacklistTextW"])  ? "Manually Blacklisted by Wildcard" : $usrIni["blacklistTextW"]);
 $bpFlu      = (!isset($usrIni["flushNotice"])     ? "This site is not blocked.<br/>Please flush your DNS cache and/or restart your browser." : $usrIni["flushNotice"]);
+$bpWStart   = (!isset($usrIni["wlStart"])         ? "The domain is being whitelisted..." : $usrIni["wlStart"]);
 $bpWSuccess = (!isset($usrIni["wlSuccess"])       ? "Success! You may have to flush your DNS cache" : $usrIni["wlSuccess"]);
 $bpWExcept  = (!isset($usrIni["wlException"])     ? "Unable to load jQuery. Is Javascript blocked?" : $usrIni["wlException"]);
 
@@ -186,16 +192,22 @@ $adlistUrlMatch = preg_replace("/https?\:\/\/(www.)?/i", "", $adlistUrls);
 // Exact search, returning a numerically sorted array of matching .domains
 // Will contain "list" if manually blacklisted
 try {
-  $adQuery = preg_grep("/(\.domains|blacklist\.txt).*\([1-9]/", file("http://pi.hole/admin/scripts/pi-hole/php/queryads.php?domain=$domainName&exact"));
+  $adQuery = preg_grep("/(domains|blacklist|Wildcard).*\([1-9]/", file("http://$serverAddr/admin/scripts/pi-hole/php/queryads.php?domain=$domainName&exact"));
 } catch (Exception $e) {
   die("[ERROR]: Exception while retrieving results from Pi-hole API: ".$e->getMessage());
 }
-if (!empty($adQuery)) {
-  $adQuery = preg_replace("/(data: ::: \/etc\/pihole\/.....)|(\.(.*)\s)/i", "", $adQuery);
-  sort($adQuery, SORT_NUMERIC);
 
-  // Return -1 if manually blacklisted, otherwise count total matches
-  $featuredTotal = ($adQuery[0] == "list" ? "-1" : count($adQuery));
+if (!empty($adQuery)) {
+  $adQuery = preg_replace("/(data: ::: |\/etc\/pihole\/.....)|(\.(.*)\s)/i", "", $adQuery);
+  sort($adQuery, SORT_NUMERIC);
+  
+  if ($adQuery[0] == "list") {
+    $featuredTotal = "-1";
+  } elseif (strpos($adQuery[0], "Wildcard") !== false) {
+    $featuredTotal = "-2";
+  } else {
+    $featuredTotal = count($adQuery);
+  }
 } else {
   $featuredTotal = 0;
 }
@@ -208,6 +220,8 @@ if ($featuredTotal > $adlistUrlCount) {
 // Define $notableFlag
 if ($featuredTotal == "-1") {
   $notableFlag = $bpBlk;
+} elseif ($featuredTotal == "-2") {
+  $notableFlag = $bpBlkW;
 } elseif ($featuredTotal == "0" && !$landPage) {
   $notableFlag = "-1";
   $notice = "This site is not blocked, but <i>landPage</i> is not configured.<br/>Did you mean to go to <a href='http://pi.hole'>Pi-hole Admin Console</a>?<br/>";
@@ -267,13 +281,14 @@ if ($debug) {
   $bp = "<md>&#8250; </md>";
   echo "${bp}Server/OS: ".os_release()."\n";
   echo "${bp}OS Uptime: ".os_uptime()."\n";
-  echo "${bp}Task Load: ".os_taskload()." ($cpuProcActive/$cpuProcTotal active)\n";
+  echo "${bp}Task Load: ".os_taskload()." ($cpuProcActive/$cpuProcTotal active tasks)\n";
   echo "${bp}CPU usage: $cpuPerc% (Temp: ".os_cputemp().", Cores: ".os_cpu_num().")\n";
   echo "${bp}RAM usage: $ramPerc% (".convert($ramUsed)." of ".convert($ramTotal)." used)\n";
   echo "${bp}PHP usage: ".convert(memory_get_peak_usage("true"))." (".ini_get("memory_limit")." limit)\n";
-  echo "${bp}P-H usage: $domains_being_blocked domains ($ads_blocked_today/$dns_queries_today blocked)\n";
+  echo "${bp}P-H usage: $domains_being_blocked domains blocked ($ads_blocked_today/$dns_queries_today queries blocked today)\n";
   echo "${bp}PHBP info: v$phbpVersion".check_update()." (RCI: v$latestPubVersion, ".substr(fgets(fopen($iniFile, 'r')), 2, -1).")\n";
   echo "${bp}PHBP conf: Passwd: $webPassword, WL: $allowWhitel, Updates: $checkUpdates\n";
+  echo "<noscript>${bp}Browser JS: Javascript Disabled (Whitelist form hidden)\n</noscript>";
   echo "${bp}".ucfirst(basename($adlist)).": $adlistUrlCount blocklists\n";
   echo "${bp}Queryads.php: ".count($adQuery)." results (".implode(',', $adQuery).")\n";
   echo "${bp}".ucfirst($domainName).": $featuredTotal lists ($notableFlag)\n";
@@ -303,26 +318,21 @@ if ($debug) {
   <link rel='shortcut icon' href='<?=$bpIcon ?>'/>
   <?=$viewPort ?>
   <meta name='robots' content='noindex,nofollow'/>
-  <?php if ($featuredTotal > "0") echo '<script src="http://pi.hole/admin/scripts/vendor/jquery.min.js"></script>'; ?>
+  <?php if ($featuredTotal > "0") echo '<script src="http://'.$serverAddr.'/admin/scripts/vendor/jquery.min.js"></script>'; ?>
   <script>
-    function tgVis(id) {
-      var e = document.getElementById('querylist');
-      if(e.style.display == 'block') {
-        e.style.display = 'none';
-        document.getElementById("info").innerHTML = "<?=$bpMore ?>";
+    function tgInfo() {
+      if($('#toggle').is(':checked')) {
+        $("#info").html("<?=$bpMore ?>");
       } else {
-        e.style.display = 'block';
-        document.getElementById("info").innerHTML = "<?=$bpLess ?>";
+        $("#info").html("<?=$bpLess ?>");
       }
     }
+    <?php // Enable whitelisting form fields if JS is enabled ?>
+    window.onload = function () { $('#pw').prop('disabled', false); $('#whitelist').prop('disabled', false); }
   </script>
   <style>
     header h1:before, header h1:after { background-image: url('<?=$bpLogo ?>'); }
   </style>
-  <noscript><style>
-    #querylist { display: block; }
-    .buttons { display: none; }
-  </style></noscript>
 </head><body><header>
   <h1><a href='/'><?=$bpHeading ?></a></h1>
 </header><main>
@@ -342,16 +352,16 @@ if ($debug) {
   </div>
   <div class='buttons'>
     <a id='back' href='javascript:history.back()'><?=$bpSafe ?></a>
-    <?php if ($featuredTotal > "0") echo "<a id='info' onclick='tgVis(\"querylist\");'>$bpMore</a>"; ?>
+    <?php if ($featuredTotal > "0") echo "<label for='toggle' id='info' onclick='tgInfo();'>$bpMore</label>"; ?>
   </div> 
   <?php } ?>
+  <input type='checkbox' id='toggle'>
   <div id='querylist'><?=$bpQFound ?>
     <pre id='output'><?php foreach ($adQuery as $num) { echo "<span>[$num]:</span><a href='$adlistUrls[$num]'>$adlistUrls[$num]</a>\n"; } ?></pre>
     <?php if ($allowWhitel && $webPassword) { ?>
     <form class='buttons'>
       <input id='domain' value='<?=$domainName ?>' disabled>
-      <input type='password' id='pw' name='pw' placeholder='<?=$bpWInput ?>'/>
-      <button id='whitelist' type='button'><?=$bpWhite ?></button>
+      <input type='password' id='pw' name='pw' placeholder='<?=$bpWInput ?>' disabled/><button id='whitelist' type='button' disabled><?=$bpWhite ?></button>
      </form>
      <pre id='notification' hidden></pre>
      <?php } ?>
@@ -363,6 +373,8 @@ if ($debug) {
 <?php // Cr: http://bit.ly/2irWj8d ?>
 <script>
   function add() {
+    $( "#notification" ).removeAttr( "hidden" );
+    $( "#notification" ).html("<?php echo $bpWStart; ?>");
     var domain = $("#domain");
     var pw = $("#pw");
     if(domain.val().length === 0){
@@ -374,9 +386,8 @@ if ($debug) {
       method: "post",
       data: {"domain":domain.val(), "list":"white", "pw":pw.val()},
       success: function(response) {
-        $( "#notification" ).removeAttr( "hidden" );
         if(response.indexOf("Pi-hole blocking") !== -1){
-          // Reload page after 5 seconds
+          <?php // Reload page after 5 seconds ?>
           setTimeout(function(){window.location.reload(1);}, 5000);
           $( "#notification" ).html("<?php echo $bpWSuccess; ?>");
         } else {
@@ -385,21 +396,20 @@ if ($debug) {
 
       },
       error: function(jqXHR, exception) {
-        $( "#notification" ).removeAttr( "hidden" );
-        // Assume javascript is enabled, but external files are being blocked (EG: Noscript/Scriptsafe)
+        <?php // Assume javascript is enabled, but external files are being blocked (EG: Noscript/Scriptsafe) ?>
         $( "#notification" ).html("<?php echo $bpWExcept; ?>");
       }
     });
   }
 
-  // Handle enter button for adding domains
+  <?php // Handle enter button for adding domains ?>
   $(document).keypress(function(e) {
       if(e.which === 13 && $("#pw").is(":focus")) {
           add();
       }
   });
 
-  // Handle buttons
+  <?php // Handle buttons ?>
   $("#whitelist").on("click", function() {
       add();
   });
@@ -527,7 +537,7 @@ function os_uptime() { // Cr: http://bit.ly/2k3GqRR
   return "$da$h:$i:$s";
 }
 
-// Return task load average for debugging
+// Return task load average
 function os_taskload() {
 	$load = sys_getloadavg();
 	return "$load[0], $load[1], $load[2]";
@@ -556,7 +566,7 @@ function os_cputemp() {
   return substr($temp, 0, 2)."c";
 }
 
-// Return CPU count for debugging
+// Return CPU count
 function os_cpu_num() { // Cr: http://bit.ly/2j7nPVb
   $numCpus = 1;
   if (is_file('/proc/cpuinfo')) {
@@ -577,7 +587,7 @@ function os_cpu_num() { // Cr: http://bit.ly/2j7nPVb
   return $numCpus;
 }
 
-// Provide RAM usage for debugging
+// Provide RAM usage
 function os_ramload() {
   global $ramPerc, $ramUsed, $ramTotal;
   $meminfo = preg_replace("/[^0-9]+/", "", file("/proc/meminfo"));
@@ -589,9 +599,9 @@ function os_ramload() {
 
 // Parse results of Pi-hole API
 function ph_parseapi() {
-  global $domains_being_blocked, $ads_blocked_today, $dns_queries_today;
-  $api = json_decode(file_get_contents("http://pi.hole/admin/api.php"));
-  if(!$api) die("[ERROR]: Unable to retrieve results from Pi-hole primary API");
+  global $serverAddr, $domains_being_blocked, $ads_blocked_today, $dns_queries_today;
+  $api = json_decode(file_get_contents("http://$serverAddr/admin/api.php"));
+  if(!$api) die("[ERROR]: Unable to retrieve results from Pi-hole API");
   $domains_being_blocked = $api->{"domains_being_blocked"};
   $ads_blocked_today = $api->{"ads_blocked_today"};
   $dns_queries_today = $api->{"dns_queries_today"};
