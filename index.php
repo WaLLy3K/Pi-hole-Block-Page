@@ -42,6 +42,8 @@ $viewPort = "<meta name='viewport' content='width=device-width, initial-scale=1.
 // Server IP address
 $serverAddr = (array_key_exists('SERVER_ADDR',$_SERVER) ? $_SERVER['SERVER_ADDR'] : $_SERVER['LOCAL_ADDR']);
 if (empty($serverAddr)) die("[ERROR]: Unable to retrieve server IP address! SERVER_ADDR: '".$_SERVER['SERVER_ADDR']."', LOCAL_ADDR: '".$_SERVER['LOCAL_ADDR']."'");
+// Add brackets around IPv6
+if (filter_var($serverAddr, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) $serverAddr = '['.$serverAddr.']';
 
 // Handle block page redirects
 if ($domainName == "pi.hole") {
