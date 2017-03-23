@@ -1,7 +1,7 @@
 <?php
 // Pi-hole Block Page: Show "Website Blocked" on blacklisted domains
 // by WaLLy3K 06SEP16 for Pi-hole
-$phbpVersion = "2.3.0";
+$phbpVersion = "2.3.2";
 
 // Debugging
 $debug = (isset($_GET["debug"]) ? true : false);
