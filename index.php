@@ -88,7 +88,8 @@ $webPassword = (preg_replace("/(.*=)/", "", array_stripos("WEBPASSWORD", $setupV
 $setupVars = null;
 
 // Confirm that Pi-hole has generated at least one block list
-if (empty(glob("/etc/pihole/list.0.*.domains"))) die("[ERROR]: There are no generated block lists (list.#.site.com.domains) in the Pi-hole folder! Please update gravity by running pihole -g.");
+$lists = glob("/etc/pihole/list.0.*.domains");
+if (empty($lists)) die("[ERROR]: There are no generated block lists (list.#.site.com.domains) in the Pi-hole folder! Please update gravity by running pihole -g.");
 
 // Determine which adlists file to use
 $adlist = (is_file("/etc/pihole/adlists.list") ? "/etc/pihole/adlists.list" : false);
