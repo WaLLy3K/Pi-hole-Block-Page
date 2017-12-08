@@ -1,3 +1,15 @@
+# This project is discontinued as of Pi-hole v3.2
+If you would like to implement a custom block page, it is recommended to create a file called `/var/www/html/pihole/custom.php` and use that instead. You may uninstall this project using the following instructions:
+
+```
+html=$(grep server.document-root /etc/lighttpd/lighttpd.conf | awk -F\" '{print $2}')
+sudo rm -rf $html/index.php /var/phbp.ini /etc/lighttpd/conf-enabled/phbp.conf
+[ -f "/var/phbp.ini.BAK" ] rm -f /var/phbp.ini.BAK
+sudo service lighttpd force-reload
+```
+
+----
+
 # Pi-hole Block Page
 A stylish and user friendly 'Website Blocked' page to add onto a [Pi-hole installation](https://pi-hole.net).
 
