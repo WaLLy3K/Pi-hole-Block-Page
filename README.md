@@ -4,7 +4,7 @@ If you would like to implement a custom block page, it is recommended to create 
 ```
 html=$(grep server.document-root /etc/lighttpd/lighttpd.conf | awk -F\" '{print $2}')
 sudo rm -rf $html/index.php /var/phbp.ini /etc/lighttpd/conf-enabled/phbp.conf
-[ -f "/var/phbp.ini.BAK" ] rm -f /var/phbp.ini.BAK
+[ -f "/var/phbp.ini.BAK" ] && rm -f /var/phbp.ini.BAK
 sudo service lighttpd force-reload
 ```
 
@@ -75,7 +75,7 @@ If you would like to remove Pi-hole Block Page, you can enter the following via 
 ````
 html=$(grep server.document-root /etc/lighttpd/lighttpd.conf | awk -F\" '{print $2}')
 sudo rm -rf $html/index.php /var/phbp.ini /etc/lighttpd/conf-enabled/phbp.conf
-[ -f "/var/phbp.ini.BAK" ] rm -f /var/phbp.ini.BAK
+[ -f "/var/phbp.ini.BAK" ] && rm -f /var/phbp.ini.BAK
 sudo service lighttpd force-reload
 ````
 
